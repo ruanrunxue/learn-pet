@@ -41,7 +41,13 @@ export const classMembers = pgTable('class_members', {
   classId: integer('class_id').notNull().references(() => classes.id), // 班级ID
   studentId: integer('student_id').notNull().references(() => users.id), // 学生ID
   joinedAt: timestamp('joined_at').defaultNow().notNull(), // 加入时间
-});
+}, (table) => ({
+  // 复合唯一索引：确保同一学生不能重复加入同一班级
+  uniqueClassStudent: {
+    columns: [table.classId, table.studentId],
+    name: 'unique_class_student',
+  },
+}));
 
 /**
  * 用户关系定义
