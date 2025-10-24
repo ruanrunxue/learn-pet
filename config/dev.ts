@@ -10,7 +10,14 @@ export default {
     devServer: {
       host: '0.0.0.0',
       port: 5000,
-      allowedHosts: 'all'
+      allowedHosts: 'all',
+      proxy: {
+        '/api': {
+          target: 'http://0.0.0.0:3001',
+          changeOrigin: true,
+          secure: false
+        }
+      }
     }
   }
 } satisfies UserConfigExport<'webpack5'>

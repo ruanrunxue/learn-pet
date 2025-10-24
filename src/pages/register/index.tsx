@@ -2,29 +2,29 @@
  * 注册页面
  * 支持教师和学生注册
  */
-import { View, Text, Input, Button, Picker } from '@tarojs/components';
-import { useState } from 'react';
-import Taro from '@tarojs/taro';
-import { authApi } from '../../utils/api';
-import './index.scss';
+import { View, Text, Input, Button, Picker } from "@tarojs/components";
+import { useState } from "react";
+import Taro from "@tarojs/taro";
+import { authApi } from "../../utils/api";
+import "./index.scss";
 
 export default function Register() {
-  const [role, setRole] = useState<'teacher' | 'student'>('student');
-  const [phone, setPhone] = useState('');
-  const [name, setName] = useState('');
-  const [school, setSchool] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState<"teacher" | "student">("teacher");
+  const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
+  const [school, setSchool] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const roleOptions = ['学生', '老师'];
+  const roleOptions = ["老师", "学生"];
 
   /**
    * 处理角色选择
    */
   const handleRoleChange = (e) => {
     const index = e.detail.value;
-    setRole(index === 0 ? 'student' : 'teacher');
+    setRole(index === 0 ? "teacher" : "student");
   };
 
   /**
@@ -33,32 +33,32 @@ export default function Register() {
   const handleRegister = async () => {
     // 验证表单
     if (!phone || !name || !school || !password || !confirmPassword) {
-      Taro.showToast({ title: '请填写完整信息', icon: 'none' });
+      Taro.showToast({ title: "请填写完整信息", icon: "none" });
       return;
     }
 
     if (password !== confirmPassword) {
-      Taro.showToast({ title: '两次密码不一致', icon: 'none' });
+      Taro.showToast({ title: "两次密码不一致", icon: "none" });
       return;
     }
 
     if (phone.length !== 11) {
-      Taro.showToast({ title: '请输入正确的手机号', icon: 'none' });
+      Taro.showToast({ title: "请输入正确的手机号", icon: "none" });
       return;
     }
 
     setLoading(true);
     try {
       await authApi.register({ phone, name, school, password, role });
-      
-      Taro.showToast({ title: '注册成功', icon: 'success' });
-      
+
+      Taro.showToast({ title: "注册成功", icon: "success" });
+
       // 延迟跳转到登录页
       setTimeout(() => {
         Taro.navigateBack();
       }, 1500);
     } catch (error: any) {
-      Taro.showToast({ title: error.message || '注册失败', icon: 'none' });
+      Taro.showToast({ title: error.message || "注册失败", icon: "none" });
     } finally {
       setLoading(false);
     }
@@ -73,9 +73,13 @@ export default function Register() {
       <View className="register-form">
         <View className="form-item">
           <Text className="form-label">角色</Text>
-          <Picker mode="selector" range={roleOptions} onChange={handleRoleChange}>
+          <Picker
+            mode="selector"
+            range={roleOptions}
+            onChange={handleRoleChange}
+          >
             <View className="picker">
-              {role === 'student' ? '学生' : '老师'}
+              {role === "teacher" ? "老师" : "学生"}
             </View>
           </Picker>
         </View>

@@ -4,9 +4,7 @@
  */
 import Taro from '@tarojs/taro';
 
-const API_BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:3001/api' 
-  : '/api';
+const API_BASE_URL = '/api';
 
 /**
  * 通用请求方法
