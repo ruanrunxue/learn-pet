@@ -1,11 +1,16 @@
 export default defineAppConfig({
   pages: [
-    'pages/index/index'
+    'pages/login/index',
+    'pages/register/index',
+    'pages/class-list/index',
+    'pages/create-class/index',
+    'pages/join-class/index',
+    'pages/class-detail/index'
   ],
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#fff',
-    navigationBarTitleText: 'WeChat',
+    navigationBarTitleText: '学宠 LearnPet',
     navigationBarTextStyle: 'black'
   }
 })
