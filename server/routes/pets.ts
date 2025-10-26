@@ -5,7 +5,7 @@
 import { Router } from 'express';
 import { eq, and } from 'drizzle-orm';
 import { db } from '../db';
-import { pets } from '../../shared/schema';
+import { pets, userPoints } from '../../shared/schema';
 import { authMiddleware } from '../middleware/auth';
 import { generatePetImage } from '../openai';
 import { ObjectStorageService } from '../objectStorage';
@@ -127,7 +127,7 @@ router.get('/class/:classId', authMiddleware, async (req, res) => {
 });
 
 /**
- * 喂养宠物（增加经验值）
+ * 喂养宠物（增加经验值，扣除用户积分）
  * POST /api/pets/:petId/feed
  * Body: { points: number }
  */
@@ -158,12 +158,46 @@ router.post('/:petId/feed', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Pet not found' });
     }
 
-    // 计算新的经验值和等级
     const currentPet = pet[0];
+
+    // 检查用户积分是否足够
+    const userPointsData = await db
+      .select()
+      .from(userPoints)
+      .where(
+        and(
+          eq(userPoints.studentId, userId),
+          eq(userPoints.classId, currentPet.classId)
+        )
+      )
+      .limit(1);
+
+    const currentPoints = userPointsData.length > 0 ? userPointsData[0].totalPoints : 0;
+    if (currentPoints < points) {
+      return res.status(400).json({ error: 'Insufficient points' });
+    }
+
+    // 计算新的经验值和等级
     const newExperience = currentPet.experience + points;
     
     // 等级计算：每100经验值升1级
     const newLevel = Math.floor(newExperience / 100) + 1;
+
+    // 扣除用户积分
+    if (userPointsData.length > 0) {
+      await db
+        .update(userPoints)
+        .set({
+          totalPoints: currentPoints - points,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(userPoints.studentId, userId),
+            eq(userPoints.classId, currentPet.classId)
+          )
+        );
+    }
 
     // 更新宠物
     const [updatedPet] = await db
@@ -206,6 +240,85 @@ router.get('/my-pets', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error fetching pets:', error);
     res.status(500).json({ error: 'Failed to fetch pets' });
+  }
+});
+
+/**
+ * 获取单个宠物详情
+ * GET /api/pets/:petId
+ */
+router.get('/:petId', authMiddleware, async (req, res) => {
+  try {
+    const petId = parseInt(req.params.petId);
+    const userId = req.user!.userId;
+    const role = req.user!.role;
+
+    // 验证角色：只有学生可以查看自己的宠物
+    if (role !== 'student') {
+      return res.status(403).json({ error: 'Only students can view pets' });
+    }
+
+    const pet = await db
+      .select()
+      .from(pets)
+      .where(and(eq(pets.id, petId), eq(pets.studentId, userId)))
+      .limit(1);
+
+    if (pet.length === 0) {
+      return res.status(404).json({ error: 'Pet not found' });
+    }
+
+    res.json(pet[0]);
+  } catch (error) {
+    console.error('Error fetching pet:', error);
+    res.status(500).json({ error: 'Failed to fetch pet' });
+  }
+});
+
+/**
+ * 获取宠物所在班级的用户积分
+ * GET /api/pets/:petId/points
+ */
+router.get('/:petId/points', authMiddleware, async (req, res) => {
+  try {
+    const petId = parseInt(req.params.petId);
+    const userId = req.user!.userId;
+    const role = req.user!.role;
+
+    // 验证角色：只有学生可以查看自己的积分
+    if (role !== 'student') {
+      return res.status(403).json({ error: 'Only students can view points' });
+    }
+
+    // 获取宠物信息
+    const pet = await db
+      .select()
+      .from(pets)
+      .where(and(eq(pets.id, petId), eq(pets.studentId, userId)))
+      .limit(1);
+
+    if (pet.length === 0) {
+      return res.status(404).json({ error: 'Pet not found' });
+    }
+
+    // 获取用户在该班级的积分
+    const points = await db
+      .select()
+      .from(userPoints)
+      .where(
+        and(
+          eq(userPoints.studentId, userId),
+          eq(userPoints.classId, pet[0].classId)
+        )
+      )
+      .limit(1);
+
+    res.json({
+      totalPoints: points.length > 0 ? points[0].totalPoints : 0,
+    });
+  } catch (error) {
+    console.error('Error fetching points:', error);
+    res.status(500).json({ error: 'Failed to fetch points' });
   }
 });
 

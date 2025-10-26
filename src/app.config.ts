@@ -12,6 +12,8 @@ export default defineAppConfig({
     'pages/material-detail/index',
     'pages/tasks/index',
     'pages/pets/index',
+    'pages/pet-adopt/index',
+    'pages/pet-detail/index',
     'pages/settings/index'
   ],
   window: {
