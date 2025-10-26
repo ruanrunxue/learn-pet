@@ -1,0 +1,82 @@
+.materials-container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 60px; // 为底部导航留空间
+
+  .page-content {
+    padding: 20px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .upload-btn {
+      padding: 8px 16px;
+      background: #1890ff;
+      color: white;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  }
+
+  .loading,
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 14px;
+  }
+
+  .materials-list {
+    .material-item {
+      background: white;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+      .material-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+
+        .material-name {
+          font-size: 16px;
+          font-weight: 500;
+          color: #333;
+          flex: 1;
+        }
+
+        .material-type {
+          font-size: 12px;
+          color: #999;
+          margin-left: 10px;
+        }
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .tag {
+          padding: 4px 8px;
+          background: #e6f7ff;
+          color: #1890ff;
+          border-radius: 4px;
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}

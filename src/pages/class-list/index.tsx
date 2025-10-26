@@ -6,6 +6,7 @@ import { View, Text, Button } from '@tarojs/components';
 import { useState } from 'react';
 import Taro, { useLoad } from '@tarojs/taro';
 import { classApi } from '../../utils/api';
+import TabBar from '../../components/TabBar';
 import './index.scss';
 
 export default function ClassList() {
@@ -144,6 +145,8 @@ export default function ClassList() {
           </Button>
         )}
       </View>
+
+      <TabBar current="/pages/class-list/index" />
     </View>
   );
 }

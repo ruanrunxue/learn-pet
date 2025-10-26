@@ -8,12 +8,18 @@ const API_BASE_URL = '/api';
 
 /**
  * 通用请求方法
+ * 导出供其他页面使用
  */
-async function request<T>(url: string, options: any = {}): Promise<T> {
+export async function request<T>(options: {
+  url: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  data?: any;
+  header?: any;
+}): Promise<T> {
   const token = Taro.getStorageSync('token');
   
   const response = await Taro.request({
-    url: `${API_BASE_URL}${url}`,
+    url: `${API_BASE_URL}${options.url}`,
     method: options.method || 'GET',
     data: options.data,
     header: {
@@ -38,7 +44,8 @@ export const authApi = {
    * 用户注册
    */
   register: (data: { phone: string; name: string; school: string; password: string; role: string }) => {
-    return request<{ message: string; user: any }>('/auth/register', {
+    return request<{ message: string; user: any }>({
+      url: '/auth/register',
       method: 'POST',
       data,
     });
@@ -48,7 +55,8 @@ export const authApi = {
    * 用户登录
    */
   login: (data: { phone: string; password: string; role: string }) => {
-    return request<{ message: string; token: string; user: any }>('/auth/login', {
+    return request<{ message: string; token: string; user: any }>({
+      url: '/auth/login',
       method: 'POST',
       data,
     });
@@ -63,7 +71,8 @@ export const classApi = {
    * 创建班级（教师）
    */
   createClass: (data: { year: string; className: string; subject: string }) => {
-    return request<{ message: string; class: any }>('/class/create', {
+    return request<{ message: string; class: any }>({
+      url: '/class/create',
       method: 'POST',
       data,
     });
@@ -73,21 +82,22 @@ export const classApi = {
    * 获取教师创建的班级
    */
   getTeacherClasses: () => {
-    return request<{ classes: any[] }>('/class/teacher');
+    return request<{ classes: any[] }>({ url: '/class/teacher' });
   },
 
   /**
    * 获取可加入的班级（学生）
    */
   getAvailableClasses: () => {
-    return request<{ classes: any[] }>('/class/available');
+    return request<{ classes: any[] }>({ url: '/class/available' });
   },
 
   /**
    * 加入班级（学生）
    */
   joinClass: (classId: number) => {
-    return request<{ message: string; membership: any }>('/class/join', {
+    return request<{ message: string; membership: any }>({
+      url: '/class/join',
       method: 'POST',
       data: { classId },
     });
@@ -97,21 +107,22 @@ export const classApi = {
    * 获取学生已加入的班级
    */
   getStudentClasses: () => {
-    return request<{ classes: any[] }>('/class/student');
+    return request<{ classes: any[] }>({ url: '/class/student' });
   },
 
   /**
    * 获取班级详情
    */
   getClassDetail: (classId: number) => {
-    return request<{ class: any; members: any[] }>(`/class/${classId}`);
+    return request<{ class: any; members: any[] }>({ url: `/class/${classId}` });
   },
 
   /**
    * 从班级删除学生（教师）
    */
   removeStudent: (classId: number, studentId: number) => {
-    return request<{ message: string }>(`/class/${classId}/member/${studentId}`, {
+    return request<{ message: string }>({
+      url: `/class/${classId}/member/${studentId}`,
       method: 'DELETE',
     });
   },

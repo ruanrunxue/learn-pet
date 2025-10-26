@@ -40,6 +40,10 @@ export default function Login() {
       // 保存token和用户信息
       Taro.setStorageSync("token", response.token);
       Taro.setStorageSync("user", response.user);
+      Taro.setStorageSync("userRole", response.user.role);
+      Taro.setStorageSync("userName", response.user.name);
+      Taro.setStorageSync("userPhone", response.user.phone);
+      Taro.setStorageSync("userSchool", response.user.school);
 
       Taro.showToast({ title: "登录成功", icon: "success" });
 
