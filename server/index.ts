@@ -7,6 +7,7 @@ import cors from 'cors';
 import authRoutes from './routes/auth';
 import classRoutes from './routes/class';
 import storageRoutes from './routes/storage';
+import petsRoutes from './routes/pets';
 
 const app = express();
 const PORT = 3001;
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/class', classRoutes);
 app.use('/api/storage', storageRoutes);
+app.use('/api/pets', petsRoutes);
 
 // 健康检查端点
 app.get('/api/health', (req, res) => {
