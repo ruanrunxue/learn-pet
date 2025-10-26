@@ -8,6 +8,8 @@ export default defineAppConfig({
     'pages/join-class/index',
     'pages/class-detail/index',
     'pages/materials/index',
+    'pages/material-upload/index',
+    'pages/material-detail/index',
     'pages/tasks/index',
     'pages/pets/index',
     'pages/settings/index'

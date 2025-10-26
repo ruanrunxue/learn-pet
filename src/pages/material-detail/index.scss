@@ -1,0 +1,115 @@
+.material-detail-container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 20px;
+
+  .loading,
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 14px;
+  }
+
+  .detail-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+
+    .header {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f0f0f0;
+
+      .title {
+        display: block;
+        font-size: 20px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 8px;
+      }
+
+      .file-type {
+        display: inline-block;
+        padding: 4px 12px;
+        background: #e6f7ff;
+        color: #1890ff;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+    }
+
+    .tags-section {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f0f0f0;
+
+      .section-title {
+        display: block;
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 8px;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .tag {
+          padding: 4px 12px;
+          background: #f5f5f5;
+          color: #666;
+          border-radius: 4px;
+          font-size: 12px;
+        }
+      }
+    }
+
+    .info-section {
+      .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #f9f9f9;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .info-label {
+          font-size: 14px;
+          color: #999;
+        }
+
+        .info-value {
+          font-size: 14px;
+          color: #333;
+        }
+      }
+    }
+  }
+
+  .action-section {
+    .download-btn {
+      width: 100%;
+      background: #1890ff;
+      color: white;
+      font-size: 16px;
+      padding: 14px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .delete-btn {
+      width: 100%;
+      background: white;
+      color: #ff4d4f;
+      font-size: 16px;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid #ff4d4f;
+    }
+  }
+}
