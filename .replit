@@ -27,13 +27,13 @@ name = "Backend"
 author = "agent"
 mode = "sequential"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run server"
-waitForPort = 3001
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx tsx --watch server/index.ts"
+waitForPort = 3001
 
 [[workflows.workflow]]
 name = "H5 Frontend"
@@ -47,13 +47,18 @@ waitForPort = 5000
 [workflows.workflow.metadata]
 outputType = "webview"
 
+[[workflows.workflow]]
+name = "kill -9 nodemon; pkill -9 tsx; sleep 2"
+mode = "sequential"
+author = 43534629
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "kill -9 nodemon; pkill -9 tsx; sleep 2"
+
 [[ports]]
 localPort = 3001
 externalPort = 3001
 
-[[ports]]
-localPort = 5000
-externalPort = 80
-
 [objectStorage]
-defaultBucketID = "replit-objstore-6596e240-87ed-4ece-b9bb-eca1e1b088d2"
+defaultBucketID = "replit-objstore-dd8331f2-11e4-4047-b3de-28415461d505"
