@@ -7,7 +7,7 @@ integrations = ["javascript_database:1.0.0", "javascript_object_storage:1.0.0", 
 channel = "stable-25_05"
 
 [workflows]
-runButton = "Backend Server"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
@@ -17,6 +17,10 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "H5 Frontend"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Backend Server"
 
 [[workflows.workflow]]
 name = "H5 Frontend"
@@ -32,12 +36,16 @@ outputType = "webview"
 
 [[workflows.workflow]]
 name = "Backend Server"
-author = 43534629
+author = "agent"
 mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx tsx --watch server/index.ts"
+args = "npx tsx server/index.ts"
+waitForPort = 3001
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[ports]]
 localPort = 3001
