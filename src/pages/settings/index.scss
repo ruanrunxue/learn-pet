@@ -1,117 +1,140 @@
-.settings-container {
+/**
+ * 设置页面样式
+ */
+.settings-page {
   min-height: 100vh;
   background: #f5f5f5;
   padding-bottom: 60px;
 
-  .page-content {
-    padding-bottom: 20px;
+  .loading,
+  .error {
+    padding: 40px 20px;
+    text-align: center;
+    font-size: 16px;
+    color: #999;
   }
 
-  .header {
+  .settings-content {
     padding: 20px;
-    background: white;
-
-    .title {
-      font-size: 24px;
-      font-weight: bold;
-      color: #333;
-    }
   }
 
-  .user-section {
-    padding: 20px;
+  .user-info-card {
     background: white;
-    margin-bottom: 12px;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
-    .user-info {
+    .user-header {
       display: flex;
       align-items: center;
       gap: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f0f0f0;
+      margin-bottom: 16px;
 
-      .avatar {
-        width: 60px;
-        height: 60px;
+      .user-avatar {
+        width: 64px;
+        height: 64px;
         border-radius: 50%;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-
-        .avatar-text {
-          font-size: 24px;
-          color: white;
-          font-weight: bold;
-        }
+        font-size: 28px;
+        color: white;
+        font-weight: bold;
       }
 
-      .info {
+      .user-basic {
         flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
 
-        .name {
+        .user-name {
           font-size: 20px;
-          font-weight: 500;
+          font-weight: 600;
           color: #333;
-          display: block;
-          margin-bottom: 4px;
         }
 
-        .role {
+        .user-role {
           font-size: 14px;
           color: #999;
+        }
+      }
+    }
+
+    .user-details {
+      .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+
+        &:not(:last-child) {
+          border-bottom: 1px solid #f5f5f5;
+        }
+
+        .detail-label {
+          font-size: 15px;
+          color: #666;
+        }
+
+        .detail-value {
+          font-size: 15px;
+          color: #333;
         }
       }
     }
   }
 
   .settings-list {
-    .settings-group {
-      background: white;
-      margin-bottom: 12px;
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
 
-      .settings-item {
-        padding: 16px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #f0f0f0;
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      cursor: pointer;
 
-        &:last-child {
-          border-bottom: none;
-        }
+      &:active {
+        background: #f5f5f5;
+      }
 
-        &.clickable {
-          cursor: pointer;
-        }
+      .item-label {
+        font-size: 16px;
+        color: #333;
+      }
 
-        .label {
-          font-size: 16px;
-          color: #333;
-        }
-
-        .value {
-          font-size: 14px;
-          color: #999;
-        }
-
-        .arrow {
-          font-size: 20px;
-          color: #ccc;
-        }
+      .item-arrow {
+        font-size: 20px;
+        color: #ccc;
       }
     }
   }
 
   .logout-section {
-    padding: 20px;
-
     .logout-btn {
+      width: 100%;
       padding: 14px;
       background: white;
       color: #ff4d4f;
       text-align: center;
-      border-radius: 8px;
+      border-radius: 12px;
       font-size: 16px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      border: none;
+
+      &:active {
+        opacity: 0.8;
+      }
     }
   }
 }

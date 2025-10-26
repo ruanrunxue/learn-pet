@@ -1,90 +1,158 @@
-import { View, Text } from '@tarojs/components';
+/**
+ * 设置页面
+ * 显示用户信息、提供编辑入口和退出登录功能
+ */
+import { View, Text, Button } from '@tarojs/components';
+import { useLoad, useDidShow } from '@tarojs/taro';
 import Taro from '@tarojs/taro';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { request } from '../../utils/api';
 import TabBar from '../../components/TabBar';
 import './index.scss';
 
 /**
- * 设置页面
- * 显示用户信息和应用设置
+ * 用户信息数据类型
+ */
+interface UserInfo {
+  id: number;
+  phone: string;
+  name: string;
+  school: string;
+  role: 'teacher' | 'student';
+}
+
+/**
+ * 设置页面组件
  */
 export default function Settings() {
-  const [userInfo, setUserInfo] = useState({
-    name: '',
-    phone: '',
-    school: '',
-    role: '',
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  /**
+   * 页面加载时获取用户信息
+   */
+  useLoad(() => {
+    loadUserInfo();
   });
 
-  useEffect(() => {
-    const name = Taro.getStorageSync('userName') || '';
-    const phone = Taro.getStorageSync('userPhone') || '';
-    const school = Taro.getStorageSync('userSchool') || '';
-    const role = Taro.getStorageSync('userRole') || '';
+  /**
+   * 页面每次显示时刷新用户信息（从编辑页返回时）
+   */
+  useDidShow(() => {
+    loadUserInfo();
+  });
 
-    setUserInfo({ name, phone, school, role });
-  }, []);
+  /**
+   * 加载用户信息
+   */
+  const loadUserInfo = async () => {
+    try {
+      setLoading(true);
+      const data = await request<{ user: UserInfo }>({
+        url: '/auth/me',
+        method: 'GET',
+      });
+      setUserInfo(data.user);
+    } catch (error) {
+      console.error('获取用户信息失败:', error);
+      Taro.showToast({ title: '获取用户信息失败', icon: 'none' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  /**
+   * 跳转到编辑个人信息页面
+   */
+  const handleEditProfile = () => {
+    Taro.navigateTo({ url: '/pages/settings/edit-profile/index' });
+  };
+
+  /**
+   * 退出登录
+   */
   const handleLogout = () => {
     Taro.showModal({
-      title: '退出登录',
+      title: '提示',
       content: '确定要退出登录吗？',
       success: (res) => {
         if (res.confirm) {
-          Taro.clearStorage();
+          Taro.clearStorageSync();
           Taro.reLaunch({ url: '/pages/login/index' });
         }
       },
     });
   };
 
+  /**
+   * 获取角色显示文本
+   */
+  const getRoleText = (role: string) => {
+    return role === 'teacher' ? '教师' : '学生';
+  };
+
+  if (loading) {
+    return (
+      <View className="settings-page">
+        <View className="loading">加载中...</View>
+        <TabBar current="settings" />
+      </View>
+    );
+  }
+
+  if (!userInfo) {
+    return (
+      <View className="settings-page">
+        <View className="error">获取用户信息失败</View>
+        <TabBar current="settings" />
+      </View>
+    );
+  }
+
   return (
-    <View className="settings-container">
-      <View className="page-content">
-        <View className="header">
-          <Text className="title">设置</Text>
-        </View>
-
-        <View className="user-section">
-          <View className="user-info">
-            <View className="avatar">
-              <Text className="avatar-text">{userInfo.name.charAt(0)}</Text>
+    <View className="settings-page">
+      <View className="settings-content">
+        {/* 用户信息卡片 */}
+        <View className="user-info-card">
+          <View className="user-header">
+            <View className="user-avatar">
+              {userInfo.name.charAt(0)}
             </View>
-            <View className="info">
-              <Text className="name">{userInfo.name}</Text>
-              <Text className="role">{userInfo.role === 'teacher' ? '教师' : '学生'}</Text>
+            <View className="user-basic">
+              <Text className="user-name">{userInfo.name}</Text>
+              <Text className="user-role">{getRoleText(userInfo.role)}</Text>
+            </View>
+          </View>
+
+          <View className="user-details">
+            <View className="detail-item">
+              <Text className="detail-label">手机号</Text>
+              <Text className="detail-value">{userInfo.phone}</Text>
+            </View>
+            <View className="detail-item">
+              <Text className="detail-label">学校</Text>
+              <Text className="detail-value">{userInfo.school}</Text>
             </View>
           </View>
         </View>
 
+        {/* 功能列表 */}
         <View className="settings-list">
-          <View className="settings-group">
-            <View className="settings-item">
-              <Text className="label">手机号</Text>
-              <Text className="value">{userInfo.phone}</Text>
-            </View>
-            <View className="settings-item">
-              <Text className="label">学校</Text>
-              <Text className="value">{userInfo.school}</Text>
-            </View>
-          </View>
-
-          <View className="settings-group">
-            <View className="settings-item clickable" onClick={() => Taro.showToast({ title: '功能开发中', icon: 'none' })}>
-              <Text className="label">关于学宠</Text>
-              <Text className="arrow">›</Text>
-            </View>
+          <View className="list-item" onClick={handleEditProfile}>
+            <Text className="item-label">📝 编辑个人信息</Text>
+            <Text className="item-arrow">›</Text>
           </View>
         </View>
 
+        {/* 退出登录按钮 */}
         <View className="logout-section">
-          <View className="logout-btn" onClick={handleLogout}>
+          <Button className="logout-btn" onClick={handleLogout}>
             退出登录
-          </View>
+          </Button>
         </View>
       </View>
-      
-      <TabBar current="/pages/settings/index" />
+
+      <TabBar current="settings" />
     </View>
   );
 }

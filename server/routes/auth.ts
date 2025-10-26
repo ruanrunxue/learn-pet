@@ -1,6 +1,6 @@
 /**
  * 认证路由
- * 处理用户注册和登录
+ * 处理用户注册、登录和用户信息管理
  */
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 import { db } from '../db';
 import { users } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'learnpet-secret-key-change-in-production';
@@ -117,6 +118,78 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('登录错误:', error);
     res.status(500).json({ error: '登录失败，请稍后重试' });
+  }
+});
+
+/**
+ * 获取当前用户信息
+ * GET /api/auth/me
+ * 需要认证
+ */
+router.get('/me', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) {
+      return res.status(404).json({ error: '用户不存在' });
+    }
+
+    res.json({
+      user: {
+        id: user.id,
+        phone: user.phone,
+        name: user.name,
+        school: user.school,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error('获取用户信息错误:', error);
+    res.status(500).json({ error: '获取用户信息失败' });
+  }
+});
+
+/**
+ * 更新用户信息
+ * PUT /api/auth/update-profile
+ * Body: { name, school }
+ * 需要认证
+ */
+router.put('/update-profile', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+    const { name, school } = req.body;
+
+    // 验证必填字段
+    if (!name || !school) {
+      return res.status(400).json({ error: '姓名和学校是必填的' });
+    }
+
+    // 更新用户信息
+    const [updatedUser] = await db
+      .update(users)
+      .set({ name, school })
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: '用户不存在' });
+    }
+
+    res.json({
+      message: '更新成功',
+      user: {
+        id: updatedUser.id,
+        phone: updatedUser.phone,
+        name: updatedUser.name,
+        school: updatedUser.school,
+        role: updatedUser.role,
+      },
+    });
+  } catch (error) {
+    console.error('更新用户信息错误:', error);
+    res.status(500).json({ error: '更新失败，请稍后重试' });
   }
 });
 

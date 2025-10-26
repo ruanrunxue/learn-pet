@@ -17,7 +17,8 @@ export default defineAppConfig({
     'pages/pets/index',
     'pages/pet-adopt/index',
     'pages/pet-detail/index',
-    'pages/settings/index'
+    'pages/settings/index',
+    'pages/settings/edit-profile/index'
   ],
   window: {
     backgroundTextStyle: 'light',
