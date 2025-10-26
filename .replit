@@ -25,6 +25,7 @@ args = "H5 Frontend"
 [[workflows.workflow]]
 name = "Backend"
 author = "agent"
+mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
@@ -53,3 +54,6 @@ externalPort = 3001
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[objectStorage]
+defaultBucketID = "replit-objstore-6596e240-87ed-4ece-b9bb-eca1e1b088d2"
