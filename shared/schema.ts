@@ -82,6 +82,160 @@ export const classMembersRelations = relations(classMembers, ({ one }) => ({
   }), // 学生用户
 }));
 
+/**
+ * 学习资料表
+ * 存储教师上传的学习资料信息
+ */
+export const learningMaterials = pgTable('learning_materials', {
+  id: serial('id').primaryKey(),
+  teacherId: integer('teacher_id').notNull().references(() => users.id),
+  name: text('name').notNull(),
+  fileType: text('file_type').notNull(),
+  fileUrl: text('file_url').notNull(),
+  tags: text('tags').notNull().default('[]'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/**
+ * 宠物表
+ * 存储学生在每个班级领养的宠物信息
+ */
+export const pets = pgTable('pets', {
+  id: serial('id').primaryKey(),
+  studentId: integer('student_id').notNull().references(() => users.id),
+  classId: integer('class_id').notNull().references(() => classes.id),
+  name: text('name').notNull(),
+  description: text('description').notNull(),
+  imageUrl: text('image_url').notNull(),
+  level: integer('level').notNull().default(1),
+  experience: integer('experience').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  uniqueStudentClass: {
+    columns: [table.studentId, table.classId],
+    name: 'unique_student_class_pet',
+  },
+}));
+
+/**
+ * 任务表
+ * 存储教师发布的任务信息
+ */
+export const tasks = pgTable('tasks', {
+  id: serial('id').primaryKey(),
+  teacherId: integer('teacher_id').notNull().references(() => users.id),
+  classId: integer('class_id').notNull().references(() => classes.id),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  points: integer('points').notNull(),
+  deadline: timestamp('deadline').notNull(),
+  attachmentUrl: text('attachment_url'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/**
+ * 任务提交表
+ * 存储学生提交的任务信息
+ */
+export const taskSubmissions = pgTable('task_submissions', {
+  id: serial('id').primaryKey(),
+  taskId: integer('task_id').notNull().references(() => tasks.id),
+  studentId: integer('student_id').notNull().references(() => users.id),
+  description: text('description').notNull(),
+  attachmentUrl: text('attachment_url'),
+  submittedAt: timestamp('submitted_at').defaultNow().notNull(),
+}, (table) => ({
+  uniqueTaskStudent: {
+    columns: [table.taskId, table.studentId],
+    name: 'unique_task_student_submission',
+  },
+}));
+
+/**
+ * 用户积分表
+ * 存储每个学生在每个班级的总积分
+ */
+export const userPoints = pgTable('user_points', {
+  id: serial('id').primaryKey(),
+  studentId: integer('student_id').notNull().references(() => users.id),
+  classId: integer('class_id').notNull().references(() => classes.id),
+  totalPoints: integer('total_points').notNull().default(0),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  uniqueStudentClassPoints: {
+    columns: [table.studentId, table.classId],
+    name: 'unique_student_class_points',
+  },
+}));
+
+/**
+ * 学习资料关系定义
+ */
+export const learningMaterialsRelations = relations(learningMaterials, ({ one }) => ({
+  teacher: one(users, {
+    fields: [learningMaterials.teacherId],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * 宠物关系定义
+ */
+export const petsRelations = relations(pets, ({ one }) => ({
+  student: one(users, {
+    fields: [pets.studentId],
+    references: [users.id],
+  }),
+  class: one(classes, {
+    fields: [pets.classId],
+    references: [classes.id],
+  }),
+}));
+
+/**
+ * 任务关系定义
+ */
+export const tasksRelations = relations(tasks, ({ one, many }) => ({
+  teacher: one(users, {
+    fields: [tasks.teacherId],
+    references: [users.id],
+  }),
+  class: one(classes, {
+    fields: [tasks.classId],
+    references: [classes.id],
+  }),
+  submissions: many(taskSubmissions),
+}));
+
+/**
+ * 任务提交关系定义
+ */
+export const taskSubmissionsRelations = relations(taskSubmissions, ({ one }) => ({
+  task: one(tasks, {
+    fields: [taskSubmissions.taskId],
+    references: [tasks.id],
+  }),
+  student: one(users, {
+    fields: [taskSubmissions.studentId],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * 用户积分关系定义
+ */
+export const userPointsRelations = relations(userPoints, ({ one }) => ({
+  student: one(users, {
+    fields: [userPoints.studentId],
+    references: [users.id],
+  }),
+  class: one(classes, {
+    fields: [userPoints.classId],
+    references: [classes.id],
+  }),
+}));
+
 // 类型导出
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -89,3 +243,13 @@ export type Class = typeof classes.$inferSelect;
 export type InsertClass = typeof classes.$inferInsert;
 export type ClassMember = typeof classMembers.$inferSelect;
 export type InsertClassMember = typeof classMembers.$inferInsert;
+export type LearningMaterial = typeof learningMaterials.$inferSelect;
+export type InsertLearningMaterial = typeof learningMaterials.$inferInsert;
+export type Pet = typeof pets.$inferSelect;
+export type InsertPet = typeof pets.$inferInsert;
+export type Task = typeof tasks.$inferSelect;
+export type InsertTask = typeof tasks.$inferInsert;
+export type TaskSubmission = typeof taskSubmissions.$inferSelect;
+export type InsertTaskSubmission = typeof taskSubmissions.$inferInsert;
+export type UserPoint = typeof userPoints.$inferSelect;
+export type InsertUserPoint = typeof userPoints.$inferInsert;

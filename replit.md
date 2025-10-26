@@ -44,6 +44,29 @@
 - 字段：id, classId, studentId, joinedAt
 - 唯一约束：(classId, studentId) 防止重复加入
 
+**learning_materials表（学习资料表）**
+- 存储教师上传的学习资料
+- 字段：id, teacherId, name, fileType, fileUrl, tags, createdAt
+
+**pets表（宠物表）**
+- 存储学生在每个班级领养的宠物
+- 字段：id, studentId, classId, name, description, imageUrl, level, experience, createdAt, updatedAt
+- 唯一约束：(studentId, classId) 每个学生在每个班级只能领养一只宠物
+
+**tasks表（任务表）**
+- 存储教师发布的任务
+- 字段：id, teacherId, classId, title, description, points, deadline, attachmentUrl, createdAt
+
+**task_submissions表（任务提交表）**
+- 存储学生提交的任务
+- 字段：id, taskId, studentId, description, attachmentUrl, submittedAt
+- 唯一约束：(taskId, studentId) 每个学生只能提交一次任务
+
+**user_points表（用户积分表）**
+- 存储每个学生在每个班级的总积分
+- 字段：id, studentId, classId, totalPoints, updatedAt
+- 唯一约束：(studentId, classId) 每个学生在每个班级只有一条积分记录
+
 ## 已实现功能
 
 ### 1. 用户认证系统 ✅
