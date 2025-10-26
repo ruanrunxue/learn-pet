@@ -129,6 +129,44 @@ GET    /api/class/:classId            # 获取班级详情
 DELETE /api/class/:classId/member/:studentId  # 删除学生（教师）
 ```
 
+### 对象存储接口
+
+```
+POST /api/storage/upload-url          # 获取文件上传URL
+POST /api/storage/confirm-upload      # 确认上传并设置ACL
+GET  /api/storage/objects/*           # 下载对象文件（需ACL权限）
+```
+
+### 宠物管理接口
+
+```
+POST /api/pets/adopt                  # 领养宠物（学生，AI生成图片）
+GET  /api/pets/class/:classId         # 获取班级宠物
+POST /api/pets/:petId/feed            # 喂养宠物（增加经验）
+GET  /api/pets/my-pets                # 获取所有宠物
+```
+
+### 学习资料接口
+
+```
+POST   /api/materials/upload          # 上传学习资料（教师）
+GET    /api/materials                 # 获取资料列表（支持标签筛选）
+GET    /api/materials/teacher/my-materials  # 获取教师的资料
+GET    /api/materials/:id             # 获取资料详情
+DELETE /api/materials/:id             # 删除资料（教师）
+```
+
+### 任务管理接口
+
+```
+POST /api/tasks/publish                # 发布任务（教师）
+GET  /api/tasks/class/:classId         # 获取班级任务
+GET  /api/tasks/:id                    # 获取任务详情（权限校验）
+POST /api/tasks/:id/submit             # 提交任务（学生，自动获得积分）
+GET  /api/tasks/:id/submissions        # 查看任务提交（教师）
+GET  /api/tasks/:id/my-submission      # 查看自己的提交（学生）
+```
+
 ## 开发指南
 
 ### 环境变量配置
@@ -169,20 +207,58 @@ npm run dev:weapp
 npm run db:push
 ```
 
+## 后端完成功能 ✅
+
+### 1. 对象存储集成 ✅
+- 集成Replit Object Storage（基于Google Cloud Storage）
+- 支持文件上传、下载、ACL权限控制
+- 上传流程：获取预签名URL → 客户端上传 → 确认并设置ACL
+
+### 2. AI图片生成集成 ✅
+- 集成Replit AI Integrations (OpenAI)
+- 宠物领养时自动生成个性化宠物图片
+- 使用gpt-image-1模型生成卡通风格宠物
+- 图片自动上传到对象存储并设为公开
+
+### 3. 宠物管理系统 ✅
+- 学生在每个班级领养一只虚拟宠物
+- AI生成个性化宠物图片
+- 宠物经验值和等级系统（每100经验升1级）
+- 使用积分喂养宠物成长
+
+### 4. 任务管理系统 ✅
+- 教师向班级发布任务（标题、描述、积分、截止日期）
+- 学生提交任务作业
+- 提交任务自动获得积分
+- 积分自动累计到user_points表
+- 完整的权限验证（教师只能管理自己的班级任务，学生只能查看和提交自己班级的任务）
+
+### 5. 学习资料管理 ✅
+- 教师上传学习资料（支持文件附件）
+- 资料标签分类
+- 按标签筛选资料
+- 教师可删除自己上传的资料
+
+### 6. 积分系统 ✅
+- 学生完成任务自动获得积分
+- 每个学生在每个班级有独立的积分累计
+- 积分存储在user_points表
+
 ## 待开发功能
 
-1. **积分系统**
-   - 学生完成任务获得积分
-   - 积分排行榜
+1. **前端页面开发**
+   - 底部导航组件
+   - 学习资料管理页面
+   - 宠物管理页面（领养、查看、喂养）
+   - 任务管理页面（教师发布、学生提交）
+   - 设置页面
+   - 积分排行榜页面
 
-2. **宠物养成系统**
-   - 学生领养宠物
-   - 积分喂养宠物成长
-
-3. **任务系统**
-   - 教师布置任务
-   - 学生提交任务
-   - 教师批改任务
+2. **功能增强**
+   - 宠物AI对话功能
+   - 任务批改和评分
+   - 文件预览功能
+   - 消息通知系统
 
 ## 安全注意事项
 
@@ -190,6 +266,20 @@ npm run db:push
 2. **密码加密：** 使用bcrypt进行密码哈希
 3. **角色验证：** API中进行严格的角色权限检查
 4. **数据验证：** 前后端都进行输入验证
+
+## 集成服务
+
+### Replit Object Storage
+- 用途：文件上传存储（学习资料、任务附件、宠物图片等）
+- 配置：已设置PRIVATE_OBJECT_DIR环境变量
+- ACL策略：支持public和private两种可见性
+- 流程：upload-url获取预签名URL → 客户端PUT上传 → confirm-upload设置ACL
+
+### Replit AI Integrations (OpenAI)
+- 用途：AI生成宠物图片、宠物对话建议
+- 配置：AI_INTEGRATIONS_OPENAI_BASE_URL, AI_INTEGRATIONS_OPENAI_API_KEY
+- 模型：gpt-image-1（图片生成）、gpt-5（文本生成）
+- 费用：使用Replit AI积分，无需自己的OpenAI API密钥
 
 ## 技术债务和改进建议
 
@@ -199,8 +289,11 @@ npm run db:push
 4. 添加错误日志和监控
 5. 实现密码重置功能
 6. 添加用户头像上传功能
+7. 对象存储路由优化（当前使用正则表达式，可能影响性能）
+8. 任务截止时间验证（目前未验证任务是否过期）
+9. 添加文件类型和大小限制
 
 ## 项目维护者
 
-最后更新：2025-10-24
-版本：1.0.0
+最后更新：2025-10-26
+版本：2.0.0 - 后端API完成

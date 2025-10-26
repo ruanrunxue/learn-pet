@@ -7,10 +7,21 @@ import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 // 这使用了Replit的AI Integrations服务，提供OpenAI兼容的API访问，无需你自己的OpenAI API密钥
-export const openai = new OpenAI({
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY
-});
+let _openai: OpenAI | null = null;
+
+/**
+ * 获取OpenAI客户端实例
+ * 延迟初始化以确保环境变量已加载
+ */
+function getOpenAIClient(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({
+      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY
+    });
+  }
+  return _openai;
+}
 
 /**
  * 生成宠物图片
@@ -24,6 +35,8 @@ export async function generatePetImage(
   petDescription: string
 ): Promise<string> {
   try {
+    const openai = getOpenAIClient();
+    
     // 构建详细的提示词，确保生成适合中学生的可爱宠物图片
     const prompt = `Create a cute, friendly cartoon pet character for a middle school learning app. 
 Pet name: ${petName}
@@ -71,6 +84,8 @@ export async function generatePetAdvice(
   studentName: string
 ): Promise<string> {
   try {
+    const openai = getOpenAIClient();
+    
     // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
     const response = await openai.chat.completions.create({
       model: "gpt-5",

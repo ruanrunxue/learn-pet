@@ -62,13 +62,18 @@ router.post('/confirm-upload', authMiddleware, async (req, res) => {
 /**
  * 下载/查看对象文件
  * 支持ACL权限检查
+ * 使用原始URL路径来提取对象路径
  */
-router.get('/objects/:objectPath(*)', authMiddleware, async (req, res) => {
+router.get(/^\/objects\/(.+)$/, authMiddleware, async (req, res) => {
   try {
     const userId = req.user!.userId.toString();
     const objectStorageService = new ObjectStorageService();
     
-    const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+    // 使用正则表达式捕获组获取对象路径
+    const capturedPath = req.params[0];
+    const objectPath = `/objects/${capturedPath}`;
+    
+    const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
     
     const canAccess = await objectStorageService.canAccessObjectEntity({
       objectFile,
