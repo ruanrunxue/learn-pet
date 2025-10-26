@@ -16,23 +16,11 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "H5 Frontend"
+args = "Backend Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Backend Server"
-
-[[workflows.workflow]]
-name = "H5 Frontend"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev:h5"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
+args = "H5 Frontend"
 
 [[workflows.workflow]]
 name = "Backend Server"
@@ -45,6 +33,18 @@ args = "npm run server"
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow]]
+name = "H5 Frontend"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev:h5"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [[ports]]
 localPort = 3001
