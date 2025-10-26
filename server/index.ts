@@ -6,6 +6,7 @@ import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth';
 import classRoutes from './routes/class';
+import storageRoutes from './routes/storage';
 
 const app = express();
 const PORT = 3001;
@@ -16,6 +17,7 @@ app.use(express.json());
 // 路由配置
 app.use('/api/auth', authRoutes);
 app.use('/api/class', classRoutes);
+app.use('/api/storage', storageRoutes);
 
 // 健康检查端点
 app.get('/api/health', (req, res) => {
