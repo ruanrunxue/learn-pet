@@ -8,6 +8,8 @@ import authRoutes from './routes/auth';
 import classRoutes from './routes/class';
 import storageRoutes from './routes/storage';
 import petsRoutes from './routes/pets';
+import materialsRoutes from './routes/materials';
+import tasksRoutes from './routes/tasks';
 
 const app = express();
 const PORT = 3001;
@@ -20,6 +22,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/class', classRoutes);
 app.use('/api/storage', storageRoutes);
 app.use('/api/pets', petsRoutes);
+app.use('/api/materials', materialsRoutes);
+app.use('/api/tasks', tasksRoutes);
 
 // 健康检查端点
 app.get('/api/health', (req, res) => {
