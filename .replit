@@ -7,7 +7,7 @@ integrations = ["javascript_database:1.0.0", "javascript_object_storage:1.0.0", 
 channel = "stable-25_05"
 
 [workflows]
-runButton = "Project"
+runButton = "Backend Server"
 
 [[workflows.workflow]]
 name = "Project"
@@ -48,13 +48,13 @@ waitForPort = 5000
 outputType = "webview"
 
 [[workflows.workflow]]
-name = "kill -9 nodemon; pkill -9 tsx; sleep 2"
-mode = "sequential"
+name = "Backend Server"
 author = 43534629
+mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "kill -9 nodemon; pkill -9 tsx; sleep 2"
+args = "npx tsx --watch server/index.ts"
 
 [[ports]]
 localPort = 3001
