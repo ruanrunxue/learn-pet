@@ -1,0 +1,158 @@
+/**
+ * 班级积分排行榜页面样式
+ */
+.rankings-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+
+  .loading {
+    padding: 60px 20px;
+    text-align: center;
+    font-size: 16px;
+    color: white;
+  }
+
+  .page-header {
+    text-align: center;
+    padding: 30px 20px;
+    color: white;
+
+    .class-name {
+      display: block;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+  }
+
+  .empty-state {
+    background: white;
+    border-radius: 16px;
+    padding: 60px 20px;
+    text-align: center;
+    margin-top: 20px;
+
+    .empty-icon {
+      display: block;
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .empty-text {
+      display: block;
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .empty-hint {
+      font-size: 14px;
+      color: #999;
+    }
+  }
+
+  .rankings-list {
+    .rank-item {
+      display: flex;
+      align-items: center;
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s;
+
+      &:active {
+        transform: scale(0.98);
+      }
+
+      &.rank-first {
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        
+        .rank-icon {
+          font-size: 32px;
+        }
+
+        .student-name {
+          font-weight: bold;
+          font-size: 18px;
+        }
+
+        .points-value {
+          font-weight: bold;
+          font-size: 24px;
+          color: #ff6b00;
+        }
+      }
+
+      &.rank-second {
+        background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+
+        .rank-icon {
+          font-size: 28px;
+        }
+
+        .student-name {
+          font-weight: 600;
+          font-size: 17px;
+        }
+      }
+
+      &.rank-third {
+        background: linear-gradient(135deg, #cd7f32 0%, #daa06d 100%);
+
+        .rank-icon {
+          font-size: 26px;
+        }
+
+        .student-name {
+          font-weight: 500;
+          font-size: 16px;
+        }
+      }
+
+      .rank-position {
+        width: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .rank-icon {
+          font-size: 24px;
+          font-weight: bold;
+        }
+      }
+
+      .rank-info {
+        flex: 1;
+        margin-left: 12px;
+
+        .student-name {
+          display: block;
+          font-size: 16px;
+          color: #333;
+          margin-bottom: 4px;
+        }
+
+        .points-label {
+          font-size: 12px;
+          color: #999;
+        }
+      }
+
+      .rank-points {
+        .points-value {
+          font-size: 20px;
+          font-weight: 600;
+          color: #667eea;
+        }
+      }
+    }
+  }
+}

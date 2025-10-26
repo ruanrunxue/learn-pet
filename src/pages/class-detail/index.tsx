@@ -65,6 +65,17 @@ export default function ClassDetail() {
     });
   };
 
+  /**
+   * 跳转到积分排行榜
+   */
+  const handleViewRankings = () => {
+    if (!classInfo) return;
+    const classDisplayName = `${classInfo.year}级${classInfo.className} ${classInfo.subject}`;
+    Taro.navigateTo({
+      url: `/pages/class-rankings/index?classId=${classInfo.id}&className=${encodeURIComponent(classDisplayName)}`,
+    });
+  };
+
   if (loading || !classInfo || !user) {
     return (
       <View className="class-detail-container">
@@ -112,10 +123,14 @@ export default function ClassDetail() {
       ) : (
         <View className="student-section">
           <View className="section-title">
-            <Text>积分排名</Text>
+            <Text>班级功能</Text>
           </View>
-          <View className="empty-state">
-            <Text className="empty-text">功能开发中，敬请期待...</Text>
+          <View className="function-list">
+            <View className="function-item" onClick={handleViewRankings}>
+              <Text className="function-icon">🏆</Text>
+              <Text className="function-label">积分排行榜</Text>
+              <Text className="function-arrow">›</Text>
+            </View>
           </View>
         </View>
       )}

@@ -4,8 +4,8 @@
  */
 import { Router } from 'express';
 import { db } from '../db';
-import { classes, classMembers, users } from '../../shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { classes, classMembers, users, userPoints } from '../../shared/schema';
+import { eq, and, desc } from 'drizzle-orm';
 import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
@@ -289,6 +289,72 @@ router.delete('/:classId/member/:studentId', async (req, res) => {
   } catch (error) {
     console.error('删除学生错误:', error);
     res.status(500).json({ error: '删除学生失败，请稍后重试' });
+  }
+});
+
+/**
+ * 获取班级积分排行榜
+ * GET /api/class/:classId/rankings
+ * 返回班级内所有学生的积分排名
+ */
+router.get('/:classId/rankings', async (req, res) => {
+  try {
+    const classId = parseInt(req.params.classId);
+    const userId = req.user!.userId;
+    const userRole = req.user!.role;
+
+    // 验证班级是否存在
+    const [classInfo] = await db.select().from(classes).where(eq(classes.id, classId));
+    if (!classInfo) {
+      return res.status(404).json({ error: '班级不存在' });
+    }
+
+    // 验证权限：教师只能查看自己创建的班级，学生只能查看已加入的班级
+    if (userRole === 'teacher' && classInfo.teacherId !== userId) {
+      return res.status(403).json({ error: '您无权查看该班级排名' });
+    }
+
+    if (userRole === 'student') {
+      const [isMember] = await db
+        .select()
+        .from(classMembers)
+        .where(and(eq(classMembers.classId, classId), eq(classMembers.studentId, userId)));
+      
+      if (!isMember) {
+        return res.status(403).json({ error: '您未加入该班级，无法查看排名' });
+      }
+    }
+
+    // 查询班级内所有学生的积分，并按积分降序排序
+    const rankings = await db
+      .select({
+        studentId: users.id,
+        studentName: users.name,
+        totalPoints: userPoints.totalPoints,
+      })
+      .from(classMembers)
+      .where(eq(classMembers.classId, classId))
+      .leftJoin(users, eq(classMembers.studentId, users.id))
+      .leftJoin(
+        userPoints,
+        and(
+          eq(userPoints.studentId, classMembers.studentId),
+          eq(userPoints.classId, classId)
+        )
+      )
+      .orderBy(desc(userPoints.totalPoints));
+
+    // 处理没有积分记录的学生（显示0分）
+    const processedRankings = rankings.map((rank) => ({
+      studentId: rank.studentId,
+      studentName: rank.studentName,
+      totalPoints: rank.totalPoints || 0,
+    }));
+
+    res.json({ rankings: processedRankings });
+  } catch (error) {
+    console.error('获取班级排名错误:', error);
+    res.status(500).json({ error: '获取排名失败，请稍后重试' });
   }
 });
 

@@ -285,6 +285,24 @@ npm run db:push
 - classId验证：前端useLoad守卫 + 后端Number.isInteger且>0双重验证
 - 学生姓名显示：后端LEFT JOIN users表返回studentName字段
 
+### 8. 设置系统前端 ✅
+
+**后端API：** (`server/routes/auth.ts`)
+- GET /api/auth/me - 获取当前用户信息（需要认证）
+- PUT /api/auth/update-profile - 更新用户信息（姓名、学校）
+
+**设置列表页：** (`/pages/settings/index`)
+- 从API加载用户信息（头像、姓名、角色、手机号、学校）
+- "编辑个人信息"按钮跳转到编辑页
+- "退出登录"功能，清除存储并返回登录页
+- useDidShow刷新机制（从编辑页返回时更新数据）
+
+**编辑个人信息页：** (`/pages/settings/edit-profile/index`)
+- 预填充当前用户信息
+- 可编辑字段：姓名、学校
+- 不可编辑提示：手机号和角色
+- 表单验证、保存反馈、成功后返回
+
 ## 待开发功能
 
 1. **前端页面开发**
@@ -344,4 +362,4 @@ npm run db:push
 ## 项目维护者
 
 最后更新：2025-10-26
-版本：2.1.0 - 任务管理系统完成
+版本：2.2.0 - 设置系统完成

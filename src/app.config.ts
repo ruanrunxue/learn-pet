@@ -18,7 +18,8 @@ export default defineAppConfig({
     'pages/pet-adopt/index',
     'pages/pet-detail/index',
     'pages/settings/index',
-    'pages/settings/edit-profile/index'
+    'pages/settings/edit-profile/index',
+    'pages/class-rankings/index'
   ],
   window: {
     backgroundTextStyle: 'light',
