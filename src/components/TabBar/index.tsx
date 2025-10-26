@@ -55,9 +55,13 @@ export default function TabBar({ current = '' }: TabBarProps) {
   // 根据角色过滤导航项
   const visibleTabs = tabs.filter((tab) => tab.roles.includes(userRole));
 
+  /**
+   * 处理导航栏点击
+   * 使用reLaunch确保页面完全重新加载
+   */
   const handleTabClick = (path: string) => {
     if (current !== path) {
-      Taro.redirectTo({ url: path });
+      Taro.reLaunch({ url: path });
     }
   };
 
