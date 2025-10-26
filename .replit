@@ -41,8 +41,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx tsx server/index.ts"
-waitForPort = 3001
+args = "npm run server"
 
 [workflows.workflow.metadata]
 outputType = "console"
@@ -50,6 +49,10 @@ outputType = "console"
 [[ports]]
 localPort = 3001
 externalPort = 3001
+
+[[ports]]
+localPort = 41395
+externalPort = 80
 
 [objectStorage]
 defaultBucketID = "replit-objstore-dd8331f2-11e4-4047-b3de-28415461d505"
