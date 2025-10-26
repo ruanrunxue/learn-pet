@@ -1,0 +1,280 @@
+.task-detail-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 20px;
+
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+    font-size: 14px;
+  }
+
+  .task-info {
+    background: white;
+    margin-bottom: 15px;
+
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 20px;
+      border-bottom: 1px solid #f0f0f0;
+
+      .task-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+        flex: 1;
+        margin-right: 15px;
+        line-height: 1.4;
+      }
+
+      .task-points {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: linear-gradient(135deg, #52c41a, #73d13d);
+        padding: 8px 15px;
+        border-radius: 10px;
+
+        .points-value {
+          font-size: 18px;
+          font-weight: bold;
+          color: white;
+        }
+
+        .points-label {
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.9);
+        }
+      }
+    }
+
+    .task-meta {
+      padding: 15px 20px;
+      border-bottom: 1px solid #f0f0f0;
+
+      .meta-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .meta-label {
+          font-size: 13px;
+          color: #999;
+          margin-right: 8px;
+        }
+
+        .meta-value {
+          font-size: 13px;
+          color: #1890ff;
+          font-weight: 500;
+
+          &.expired {
+            color: #ff4d4f;
+          }
+        }
+
+        .expired-badge {
+          font-size: 11px;
+          padding: 2px 8px;
+          background: #fff1f0;
+          color: #ff4d4f;
+          border-radius: 4px;
+          margin-left: 8px;
+        }
+      }
+    }
+
+    .task-content {
+      padding: 20px;
+
+      .content-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 12px;
+      }
+
+      .content-text {
+        font-size: 14px;
+        color: #666;
+        line-height: 1.8;
+        white-space: pre-wrap;
+      }
+    }
+
+    .task-attachment {
+      padding: 15px 20px;
+      background: #fafafa;
+      border-top: 1px solid #f0f0f0;
+
+      .attachment-label {
+        display: block;
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 8px;
+      }
+
+      .attachment-link {
+        font-size: 13px;
+        color: #1890ff;
+        word-break: break-all;
+      }
+    }
+  }
+
+  .student-section {
+    .my-submission {
+      background: white;
+      padding: 20px;
+      margin: 0 15px;
+      border-radius: 12px;
+
+      .section-title {
+        display: block;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 15px;
+      }
+
+      .submission-card {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 8px;
+
+        .submission-time {
+          display: block;
+          font-size: 12px;
+          color: #999;
+          margin-bottom: 10px;
+        }
+
+        .submission-desc {
+          font-size: 14px;
+          color: #666;
+          line-height: 1.6;
+          margin-bottom: 10px;
+        }
+
+        .submission-attachment {
+          font-size: 13px;
+          color: #1890ff;
+        }
+      }
+    }
+
+    .submit-section {
+      padding: 20px 15px;
+
+      .not-submitted-hint {
+        text-align: center;
+        padding: 15px;
+        background: #fff7e6;
+        border: 1px solid #ffd591;
+        border-radius: 8px;
+        margin-bottom: 15px;
+
+        .hint-text {
+          font-size: 14px;
+          color: #fa8c16;
+        }
+      }
+
+      .loading-text {
+        display: block;
+        text-align: center;
+        color: #999;
+        font-size: 14px;
+      }
+
+      .submit-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #52c41a, #73d13d);
+        color: white;
+        padding: 14px 0;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 500;
+        border: none;
+
+        &:disabled {
+          background: #d9d9d9;
+          color: #999;
+        }
+      }
+    }
+  }
+
+  .teacher-section {
+    background: white;
+    padding: 20px;
+    margin: 0 15px;
+    border-radius: 12px;
+
+    .section-title {
+      display: block;
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .empty-submissions {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+      font-size: 14px;
+    }
+
+    .submissions-list {
+      .submission-card {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .submission-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+
+          .student-name {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+          }
+
+          .submission-time {
+            font-size: 12px;
+            color: #999;
+          }
+        }
+
+        .submission-desc {
+          font-size: 14px;
+          color: #666;
+          line-height: 1.6;
+          margin-bottom: 10px;
+        }
+
+        .submission-attachment {
+          font-size: 13px;
+          color: #1890ff;
+        }
+      }
+    }
+  }
+}

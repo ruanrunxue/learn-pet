@@ -5,7 +5,7 @@
 import { Router } from 'express';
 import { eq, and, sql } from 'drizzle-orm';
 import { db } from '../db';
-import { tasks, taskSubmissions, userPoints, classes, classMembers } from '../../shared/schema';
+import { tasks, taskSubmissions, userPoints, classes, classMembers, users } from '../../shared/schema';
 import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
@@ -28,7 +28,7 @@ router.post('/publish', authMiddleware, async (req, res) => {
     }
 
     // 验证必填字段
-    if (!classId || !title || !description || !points || !deadline) {
+    if (!Number.isInteger(classId) || classId <= 0 || !title || !description || !points || !deadline) {
       return res.status(400).json({ error: 'classId, title, description, points, and deadline are required' });
     }
 
@@ -241,7 +241,7 @@ router.post('/:id/submit', authMiddleware, async (req, res) => {
 
 /**
  * 获取任务的所有提交
- * 教师查看任务的所有学生提交
+ * 教师查看任务的所有学生提交（包含学生姓名信息）
  * GET /api/tasks/:id/submissions
  */
 router.get('/:id/submissions', authMiddleware, async (req, res) => {
@@ -266,14 +266,23 @@ router.get('/:id/submissions', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Task not found or you do not have permission' });
     }
 
-    // 获取所有提交
-    const submissions = await db
-      .select()
+    // 获取所有提交（包含学生姓名）
+    const submissionsWithStudentInfo = await db
+      .select({
+        id: taskSubmissions.id,
+        taskId: taskSubmissions.taskId,
+        studentId: taskSubmissions.studentId,
+        studentName: users.name,
+        description: taskSubmissions.description,
+        attachmentUrl: taskSubmissions.attachmentUrl,
+        submittedAt: taskSubmissions.submittedAt,
+      })
       .from(taskSubmissions)
+      .leftJoin(users, eq(taskSubmissions.studentId, users.id))
       .where(eq(taskSubmissions.taskId, taskId))
       .orderBy(sql`${taskSubmissions.submittedAt} DESC`);
 
-    res.json(submissions);
+    res.json(submissionsWithStudentInfo);
   } catch (error) {
     console.error('Error fetching submissions:', error);
     res.status(500).json({ error: 'Failed to fetch submissions' });

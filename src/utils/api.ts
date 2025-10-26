@@ -7,6 +7,20 @@ import Taro from '@tarojs/taro';
 const API_BASE_URL = '/api';
 
 /**
+ * 自定义API错误类
+ * 包含HTTP状态码信息
+ */
+export class ApiError extends Error {
+  statusCode: number;
+  
+  constructor(message: string, statusCode: number) {
+    super(message);
+    this.statusCode = statusCode;
+    this.name = 'ApiError';
+  }
+}
+
+/**
  * 通用请求方法
  * 导出供其他页面使用
  */
@@ -30,7 +44,10 @@ export async function request<T>(options: {
   });
 
   if (response.statusCode !== 200 && response.statusCode !== 201) {
-    throw new Error((response.data as any)?.error || '请求失败');
+    throw new ApiError(
+      (response.data as any)?.error || '请求失败',
+      response.statusCode
+    );
   }
 
   return response.data as T;
