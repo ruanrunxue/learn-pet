@@ -51,24 +51,13 @@ router.post('/adopt', authMiddleware, async (req, res) => {
 
     // 将base64图片上传到对象存储
     const objectStorageService = new ObjectStorageService();
-    const { uploadURL, objectPath } = await objectStorageService.getObjectEntityUploadURL();
-
-    // 将base64转换为Buffer并上传
     const imageBuffer = Buffer.from(imageBase64, 'base64');
-    const uploadResponse = await fetch(uploadURL, {
-      method: 'PUT',
-      body: imageBuffer,
-      headers: {
-        'Content-Type': 'image/png',
-      },
-    });
-
-    if (!uploadResponse.ok) {
-      throw new Error('Failed to upload pet image to storage');
-    }
+    
+    // 使用新的uploadFile方法上传
+    const objectPath = await objectStorageService.uploadFile(imageBuffer, 'image/png');
 
     // 设置图片ACL为public，便于前端显示
-    await objectStorageService.trySetObjectEntityAclPolicy(objectPath, {
+    await objectStorageService.setObjectAclPolicy(objectPath, {
       owner: userId.toString(),
       visibility: 'public',
     });

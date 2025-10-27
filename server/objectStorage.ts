@@ -157,7 +157,7 @@ export class ObjectStorageService {
       throw new Error(`Failed to check object existence: ${result.error.message}`);
     }
 
-    const exists = result.value.some(item => item.path === objectKey);
+    const exists = result.value.some(item => item.key === objectKey);
     if (!exists) {
       throw new ObjectNotFoundError();
     }
@@ -272,6 +272,6 @@ export class ObjectStorageService {
       throw new Error(`Failed to list objects: ${result.error.message}`);
     }
 
-    return result.value.map(item => `/objects/${item.path}`);
+    return result.value.map(item => `/objects/${item.key}`);
   }
 }
