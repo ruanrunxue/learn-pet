@@ -6,6 +6,9 @@
 import { Client } from "@replit/object-storage";
 import { Response } from "express";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { objectAclPolicies } from "../shared/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * Replit对象存储客户端
@@ -26,7 +29,7 @@ export class ObjectNotFoundError extends Error {
 
 /**
  * 对象ACL策略
- * 存储在对象路径的元数据中
+ * 存储在数据库中
  */
 export interface ObjectAclPolicy {
   owner: string;
@@ -46,9 +49,6 @@ export enum ObjectPermission {
  * 处理文件上传、下载、ACL管理等操作
  */
 export class ObjectStorageService {
-  // 存储ACL策略的内存映射 (objectPath -> ACL policy)
-  // 注意：在生产环境中应该使用数据库存储ACL策略
-  private static aclPolicies: Map<string, ObjectAclPolicy> = new Map();
 
   constructor() {}
 
@@ -107,7 +107,7 @@ export class ObjectStorageService {
       const objectKey = objectPath.slice("/objects/".length);
 
       // 获取ACL策略
-      const aclPolicy = ObjectStorageService.aclPolicies.get(objectPath);
+      const aclPolicy = await this.getObjectAclPolicy(objectPath);
       const isPublic = aclPolicy?.visibility === "public";
 
       // 下载文件为stream（直接await，返回Readable）
@@ -146,24 +146,28 @@ export class ObjectStorageService {
    * @param aclPolicy - ACL策略
    */
   async setObjectAclPolicy(objectPath: string, aclPolicy: ObjectAclPolicy): Promise<void> {
-    // 验证对象是否存在
+    // 验证对象路径格式
     if (!objectPath.startsWith("/objects/")) {
       throw new Error("Invalid object path");
     }
-    const objectKey = objectPath.slice("/objects/".length);
-    
-    const result = await objectStorageClient.list();
-    if (!result.ok) {
-      throw new Error(`Failed to check object existence: ${result.error.message}`);
-    }
 
-    const exists = result.value.some(item => item.key === objectKey);
-    if (!exists) {
-      throw new ObjectNotFoundError();
-    }
-
-    // 存储ACL策略（注意：在生产环境应使用数据库）
-    ObjectStorageService.aclPolicies.set(objectPath, aclPolicy);
+    // 使用upsert（插入或更新）
+    await db
+      .insert(objectAclPolicies)
+      .values({
+        objectPath,
+        owner: aclPolicy.owner,
+        visibility: aclPolicy.visibility,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: objectAclPolicies.objectPath,
+        set: {
+          owner: aclPolicy.owner,
+          visibility: aclPolicy.visibility,
+          updatedAt: new Date(),
+        },
+      });
   }
 
   /**
@@ -171,7 +175,20 @@ export class ObjectStorageService {
    * @param objectPath - 对象路径
    */
   async getObjectAclPolicy(objectPath: string): Promise<ObjectAclPolicy | null> {
-    return ObjectStorageService.aclPolicies.get(objectPath) || null;
+    const result = await db
+      .select()
+      .from(objectAclPolicies)
+      .where(eq(objectAclPolicies.objectPath, objectPath))
+      .limit(1);
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    return {
+      owner: result[0].owner,
+      visibility: result[0].visibility as "public" | "private",
+    };
   }
 
   /**
@@ -232,7 +249,7 @@ export class ObjectStorageService {
     }
 
     // 删除ACL策略
-    ObjectStorageService.aclPolicies.delete(objectPath);
+    await db.delete(objectAclPolicies).where(eq(objectAclPolicies.objectPath, objectPath));
   }
 
   /**
@@ -255,9 +272,9 @@ export class ObjectStorageService {
     }
 
     // 复制ACL策略
-    const aclPolicy = ObjectStorageService.aclPolicies.get(sourcePath);
+    const aclPolicy = await this.getObjectAclPolicy(sourcePath);
     if (aclPolicy) {
-      ObjectStorageService.aclPolicies.set(destPath, aclPolicy);
+      await this.setObjectAclPolicy(destPath, aclPolicy);
     }
   }
 

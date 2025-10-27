@@ -1,380 +1,74 @@
 # 学宠 LearnPet - 教学宠物养成应用
 
-## 项目概述
-
-学宠（LearnPet）是一个跨端教学辅助应用，支持H5和微信小程序。学生通过完成老师布置的任务获得积分，积分用于养成虚拟宠物。
-
-**技术栈：**
-- 前端：Taro 4.1.7 + React
-- 后端：Node.js v22.20.0 + Express
-- 数据库：PostgreSQL (Neon) + Drizzle ORM
-
-## 项目架构
-
-### 目录结构
-
-```
-├── config/              # Taro配置文件
-├── server/              # 后端API服务器
-│   ├── routes/          # API路由
-│   ├── middleware/      # 中间件（认证等）
-│   ├── db.ts           # 数据库连接
-│   └── index.ts        # 服务器入口
-├── shared/              # 前后端共享代码
-│   └── schema.ts       # 数据库Schema
-├── src/                 # 前端源代码
-│   ├── pages/          # 页面组件
-│   ├── utils/          # 工具函数
-│   └── app.config.ts   # 应用配置
-└── drizzle.config.ts   # Drizzle ORM配置
-```
-
-### 数据库设计
-
-**users表（用户表）**
-- 存储教师和学生的账户信息
-- 字段：id, phone, name, school, password, role, createdAt
-
-**classes表（班级表）**
-- 存储教师创建的班级信息
-- 字段：id, teacherId, year, className, subject, createdAt
-
-**class_members表（班级成员表）**
-- 学生和班级的多对多关系
-- 字段：id, classId, studentId, joinedAt
-- 唯一约束：(classId, studentId) 防止重复加入
-
-**learning_materials表（学习资料表）**
-- 存储教师上传的学习资料
-- 字段：id, teacherId, name, fileType, fileUrl, tags, createdAt
-
-**pets表（宠物表）**
-- 存储学生在每个班级领养的宠物
-- 字段：id, studentId, classId, name, description, imageUrl, level, experience, createdAt, updatedAt
-- 唯一约束：(studentId, classId) 每个学生在每个班级只能领养一只宠物
-
-**tasks表（任务表）**
-- 存储教师发布的任务
-- 字段：id, teacherId, classId, title, description, points, deadline, attachmentUrl, createdAt
-
-**task_submissions表（任务提交表）**
-- 存储学生提交的任务
-- 字段：id, taskId, studentId, description, attachmentUrl, submittedAt
-- 唯一约束：(taskId, studentId) 每个学生只能提交一次任务
-
-**user_points表（用户积分表）**
-- 存储每个学生在每个班级的总积分
-- 字段：id, studentId, classId, totalPoints, updatedAt
-- 唯一约束：(studentId, classId) 每个学生在每个班级只有一条积分记录
-
-## 已实现功能
-
-### 1. 用户认证系统 ✅
-
-**登录页面** (`/pages/login/index`)
-- 支持教师和学生角色选择
-- 手机号 + 密码登录
-- 自动跳转到班级列表
-
-**注册页面** (`/pages/register/index`)
-- 教师注册：手机号、姓名、学校、密码
-- 学生注册：手机号、姓名、学校、密码
-- 注册成功后自动跳转登录
-
-### 2. 班级管理系统 ✅
-
-**教师功能：**
-- 班级列表页 (`/pages/class-list/index`)
-  - 查看已创建的班级
-  - 显示年份、班级、学科信息
-  
-- 创建班级页 (`/pages/create-class/index`)
-  - 输入年份、班级名称、学科
-  - 创建后返回列表
-  
-- 班级详情页 (`/pages/class-detail/index`)
-  - 查看班级成员列表
-  - 可删除学生
-
-**学生功能：**
-- 班级列表页 (`/pages/class-list/index`)
-  - 查看已加入的班级
-  - 显示教师姓名、年份、班级、学科
-  
-- 加入班级页 (`/pages/join-class/index`)
-  - 浏览所有可加入的班级
-  - 一键加入班级
-  
-- 班级详情页 (`/pages/class-detail/index`)
-  - 积分排名功能预留（待开发）
-
-## API接口
-
-### 认证接口
-
-```
-POST /api/auth/register  # 用户注册
-POST /api/auth/login     # 用户登录
-```
-
-### 班级接口
-
-```
-POST   /api/class/create              # 创建班级（教师）
-GET    /api/class/teacher             # 获取教师创建的班级
-GET    /api/class/available           # 获取可加入的班级（学生）
-POST   /api/class/join                # 加入班级（学生）
-GET    /api/class/student             # 获取学生已加入的班级
-GET    /api/class/:classId            # 获取班级详情
-DELETE /api/class/:classId/member/:studentId  # 删除学生（教师）
-```
-
-### 对象存储接口
-
-```
-POST /api/storage/upload-url          # 获取文件上传URL
-POST /api/storage/confirm-upload      # 确认上传并设置ACL
-GET  /api/storage/objects/*           # 下载对象文件（需ACL权限）
-```
-
-### 宠物管理接口
-
-```
-POST /api/pets/adopt                  # 领养宠物（学生，AI生成图片）
-GET  /api/pets/class/:classId         # 获取班级宠物
-POST /api/pets/:petId/feed            # 喂养宠物（增加经验）
-GET  /api/pets/my-pets                # 获取所有宠物
-```
-
-### 学习资料接口
-
-```
-POST   /api/materials/upload          # 上传学习资料（教师）
-GET    /api/materials                 # 获取资料列表（支持标签筛选）
-GET    /api/materials/teacher/my-materials  # 获取教师的资料
-GET    /api/materials/:id             # 获取资料详情
-DELETE /api/materials/:id             # 删除资料（教师）
-```
-
-### 任务管理接口
-
-```
-POST /api/tasks/publish                # 发布任务（教师）
-GET  /api/tasks/class/:classId         # 获取班级任务
-GET  /api/tasks/:id                    # 获取任务详情（权限校验）
-POST /api/tasks/:id/submit             # 提交任务（学生，自动获得积分）
-GET  /api/tasks/:id/submissions        # 查看任务提交（教师）
-GET  /api/tasks/:id/my-submission      # 查看自己的提交（学生）
-```
-
-## 开发指南
-
-### 环境变量配置
-
-**重要：** 在生产环境中，必须设置以下环境变量：
-
-```bash
-# JWT密钥（生产环境必须设置）
-JWT_SECRET=your-super-secret-key-here
-
-# 数据库连接（Replit自动配置）
-DATABASE_URL=postgresql://...
-```
-
-### 本地开发
-
-1. 启动后端服务器：
-```bash
-npm run server
-```
-后端将在 http://0.0.0.0:3001 运行
-
-2. 启动H5前端：
-```bash
-npm run dev:h5
-```
-前端将在 http://0.0.0.0:5000 运行
-
-3. 编译微信小程序：
-```bash
-npm run dev:weapp
-```
-
-### 数据库迁移
-
-修改 `shared/schema.ts` 后，运行：
-```bash
-npm run db:push
-```
-
-## 后端完成功能 ✅
-
-### 1. 对象存储集成 ✅
-- 集成Replit Object Storage（基于Google Cloud Storage）
-- 支持文件上传、下载、ACL权限控制
-- 上传流程：获取预签名URL → 客户端上传 → 确认并设置ACL
-
-### 2. AI图片生成集成 ✅
-- 集成Replit AI Integrations (OpenAI)
-- 宠物领养时自动生成个性化宠物图片
-- 使用gpt-image-1模型生成卡通风格宠物
-- 图片自动上传到对象存储并设为公开
-
-### 3. 宠物管理系统 ✅
-- 学生在每个班级领养一只虚拟宠物
-- AI生成个性化宠物图片（gpt-image-1）
-- 宠物经验值和等级系统（每100经验升1级）
-- 使用积分喂养宠物成长（服务端验证并扣除积分）
-- 新增API: GET /api/pets/:petId, GET /api/pets/:petId/points
-
-### 4. 任务管理系统 ✅
-- 教师向班级发布任务（标题、描述、积分、截止日期）
-- 学生提交任务作业
-- 提交任务自动获得积分
-- 积分自动累计到user_points表
-- 完整的权限验证（教师只能管理自己的班级任务，学生只能查看和提交自己班级的任务）
-
-### 5. 学习资料管理 ✅
-- 教师上传学习资料（支持文件附件）
-- 资料标签分类
-- 按标签筛选资料
-- 教师可删除自己上传的资料
-
-### 6. 积分系统 ✅
-- 学生完成任务自动获得积分
-- 每个学生在每个班级有独立的积分累计
-- 积分存储在user_points表
-
-## 前端完成功能 ✅
-
-### 1. 底部导航系统 ✅
-- 自定义TabBar组件，根据角色显示不同导航项
-- 教师：首页、资料、任务、设置（4项）
-- 学生：首页、资料、任务、宠物、设置（5项）
-- 使用emoji图标（可替换为真实PNG图标）
-
-### 2. 学习资料管理前端 ✅（H5完整支持）
-- **列表页**：显示所有学习资料，支持标签展示，教师有上传按钮
-- **上传页**（H5）：教师专用，支持文件选择、类型选择、标签输入，完整对象存储上传流程
-- **详情页**：显示资料完整信息，支持下载（H5打开新窗口），教师可删除自己的资料
-- **权限控制**：useLoad守卫确保只有教师能访问上传页
-- **已知限制**：小程序环境的文件上传暂未实现（二进制处理复杂性），提示用户使用H5版本
-
-### 3. 宠物管理系统前端 ✅
-- **列表页**：显示学生的所有宠物，含等级、经验、升级进度条
-- **领养页**：选择班级、输入宠物信息，AI生成个性化宠物图片
-- **详情页**：查看宠物详情、使用积分喂养宠物、实时经验和等级更新
-- **权限控制**：只有学生可访问宠物功能，教师显示友好提示
-- **数据同步**：喂养宠物同时扣除用户积分（服务端验证）
-
-### 7. 任务管理系统前端 ✅
-
-**教师功能：** (`/pages/tasks/index`, `/pages/task-publish/index`, `/pages/task-detail/index`)
-- 任务列表页：班级切换（Tabs）、任务卡片（标题、积分、截止时间）、发布按钮
-- 发布任务页：classId前后端双重验证、表单验证（标题、描述、积分、截止时间）
-- 任务详情页：任务完整信息、学生提交列表（含学生姓名）
-
-**学生功能：** (`/pages/tasks/index`, `/pages/task-detail/index`, `/pages/task-submit/index`)
-- 任务列表页：班级切换（Tabs）、任务卡片、积分显示
-- 任务详情页：任务信息、提交状态精确显示（404→未提交、其他→加载失败）
-- 任务提交页：描述输入、提交成功反馈"积分已到账"
-
-**技术亮点：**
-- ApiError类：包含HTTP状态码，区分404和其他错误
-- 数据解构：正确处理`{ classes: [...] }`响应格式
-- classId验证：前端useLoad守卫 + 后端Number.isInteger且>0双重验证
-- 学生姓名显示：后端LEFT JOIN users表返回studentName字段
-
-### 8. 设置系统前端 ✅
-
-**后端API：** (`server/routes/auth.ts`)
-- GET /api/auth/me - 获取当前用户信息（需要认证）
-- PUT /api/auth/update-profile - 更新用户信息（姓名、学校）
-
-**设置列表页：** (`/pages/settings/index`)
-- 从API加载用户信息（头像、姓名、角色、手机号、学校）
-- "编辑个人信息"按钮跳转到编辑页
-- "退出登录"功能，清除存储并返回登录页
-- useDidShow刷新机制（从编辑页返回时更新数据）
-
-**编辑个人信息页：** (`/pages/settings/edit-profile/index`)
-- 预填充当前用户信息
-- 可编辑字段：姓名、学校
-- 不可编辑提示：手机号和角色
-- 表单验证、保存反馈、成功后返回
-
-### 9. 班级积分排行榜 ✅
-
-**后端API：** (`server/routes/class.ts`)
-- GET /api/class/:classId/rankings - 获取班级积分排名
-- 权限验证：教师只能查看自己的班级，学生只能查看已加入的班级
-- LEFT JOIN查询获取学生信息和积分
-- 按积分降序排序，COALESCE处理null值
-
-**排行榜页面：** (`/pages/class-rankings/index`)
-- 显示班级名称和"积分排行榜"标题
-- 前三名特殊图标和渐变背景（🥇🥈🥉）
-- 完整排名列表：排名、学生姓名、积分
-- 空状态提示（暂无排名数据）
-
-**班级详情页优化：** (`/pages/class-detail/index`)
-- 学生视图新增"班级功能"区域
-- 添加"🏆 积分排行榜"功能项
-- 点击跳转到积分排行榜页面
-
-## 待开发功能
-
-1. **功能增强**
-   - 小程序文件上传支持（base64代理或multipart上传）
-   - 宠物AI对话功能
-   - 任务批改和评分
-   - 文件预览功能
-   - 消息通知系统
-
-## 安全注意事项
-
-1. **JWT密钥：** 生产环境必须配置强密钥
-2. **密码加密：** 使用bcrypt进行密码哈希
-3. **角色验证：** API中进行严格的角色权限检查
-4. **数据验证：** 前后端都进行输入验证
-
-## 集成服务
-
-### Replit Object Storage
-- 用途：文件上传存储（学习资料、任务附件、宠物图片等）
-- 配置：已设置PRIVATE_OBJECT_DIR环境变量
-- ACL策略：支持public和private两种可见性
-- 流程：upload-url获取预签名URL → 客户端PUT上传 → confirm-upload设置ACL
-
-### Replit AI Integrations (OpenAI)
-- 用途：AI生成宠物图片、宠物对话建议
-- 配置：AI_INTEGRATIONS_OPENAI_BASE_URL, AI_INTEGRATIONS_OPENAI_API_KEY
-- 模型：gpt-image-1（图片生成）、gpt-5（文本生成）
-- 费用：使用Replit AI积分，无需自己的OpenAI API密钥
-
-## 技术债务和改进建议
-
-1. **紧急优先级**
-   - 小程序文件上传支持（学习资料、任务附件）
-   - 资料列表页刷新机制（上传/删除后自动刷新）
-
-2. **高优先级**
-   - 添加API请求速率限制
-   - 任务截止时间验证（目前未验证任务是否过期）
-   - 添加文件类型和大小限制
-
-3. **中优先级**
-   - 添加单元测试和集成测试
-   - 优化前端状态管理
-   - 添加错误日志和监控
-   - 对象存储路由优化（当前使用正则表达式）
-
-4. **低优先级**
-   - 实现密码重置功能
-   - 添加用户头像上传功能
-   - 上传成功/失败遥测数据收集
-
-## 项目维护者
-
-最后更新：2025-10-26
-版本：2.3.0 - 积分排行榜系统完成
+## Overview
+
+学宠 (LearnPet) is a cross-platform educational assistant application available on H5 and WeChat Mini Programs. It enables students to earn points by completing teacher-assigned tasks, which are then used to nurture virtual pets. The project aims to enhance student engagement and motivation through gamification in an educational setting.
+
+## User Preferences
+
+I prefer concise and direct communication. When suggesting code changes, provide clear explanations for the rationale behind them. For new features or significant modifications, please outline the approach and ask for confirmation before proceeding. Ensure all interactions and changes align with the established technical stack and architectural patterns.
+
+## System Architecture
+
+The application is built with a modern web stack, featuring a cross-platform frontend and a Node.js backend.
+
+**Technology Stack:**
+- **Frontend:** Taro 4.1.7 + React (for H5 and WeChat Mini Programs)
+- **Backend:** Node.js v22.20.0 + Express
+- **Database:** PostgreSQL (Neon) + Drizzle ORM
+
+**Core Features & Design:**
+
+1.  **User Authentication & Authorization:**
+    *   Supports teacher and student roles with distinct access levels.
+    *   Secure registration and login using phone number and password (hashed with bcrypt).
+    *   JWT for session management.
+
+2.  **Class Management System:**
+    *   Teachers can create and manage classes, including adding/removing students.
+    *   Students can browse available classes and join them.
+    *   Database schema ensures unique class memberships and proper data relationships.
+
+3.  **Pet Management System:**
+    *   Students can adopt a unique virtual pet for each class.
+    *   Pets have levels and experience points; experience increases through activities like "feeding" (using earned points).
+    *   AI-generated personalized pet images (cartoony style) upon adoption.
+
+4.  **Task Management System:**
+    *   Teachers can publish tasks with descriptions, points, and deadlines to specific classes.
+    *   Students can submit tasks, automatically earning points upon submission.
+    *   Comprehensive permission validation ensures teachers manage their own classes' tasks and students interact with their assigned tasks.
+
+5.  **Learning Materials Management:**
+    *   Teachers can upload learning materials (with attachments and tags).
+    *   Materials are searchable and filterable by tags.
+
+6.  **Points System:**
+    *   Students earn points by completing tasks.
+    *   Points are tracked per student per class, stored in a dedicated `user_points` table.
+    *   Points are consumed when "feeding" pets.
+
+7.  **Class Rankings:**
+    *   Displays a leaderboard for student points within each class.
+    *   Special visual treatment for top-ranked students.
+
+8.  **UI/UX:**
+    *   Custom TabBar component for navigation, dynamically adjusting based on user role (Teacher: Home, Materials, Tasks, Settings; Student: Home, Materials, Tasks, Pets, Settings).
+    *   Responsive design for H5 and WeChat Mini Programs.
+
+**System Design Choices:**
+
+*   **Modular Architecture:** Clear separation of frontend, backend, and shared code.
+*   **Database Schema:** Normalized design with clear relationships (`users`, `classes`, `class_members`, `learning_materials`, `pets`, `tasks`, `task_submissions`, `user_points`).
+*   **API-driven:** RESTful API for all frontend-backend communication.
+*   **Replit Integration:** Leverages Replit's native Object Storage and AI Integrations for key functionalities.
+
+## External Dependencies
+
+The project integrates with the following external services and APIs:
+
+1.  **PostgreSQL (Neon):** Primary relational database for all application data.
+2.  **Replit Object Storage (@replit/object-storage):** Used for storing all user-uploaded files, including learning materials, task attachments, and AI-generated pet images.
+3.  **Replit AI Integrations (OpenAI):**
+    *   **gpt-image-1:** For generating personalized pet images during the pet adoption process.
+    *   **gpt-5:** (Planned for pet conversation features).

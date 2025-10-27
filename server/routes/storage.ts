@@ -58,27 +58,62 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
 });
 
 /**
+ * 条件认证中间件
+ * 对于public资源跳过认证，private资源使用authMiddleware
+ */
+async function conditionalAuth(req, res, next) {
+  try {
+    const objectStorageService = new ObjectStorageService();
+    const capturedPath = req.params[0];
+    const objectPath = `/objects/${capturedPath}`;
+    
+    // 获取ACL策略
+    const aclPolicy = await objectStorageService.getObjectAclPolicy(objectPath);
+    
+    // 如果对象不存在ACL，拒绝访问
+    if (!aclPolicy) {
+      return res.sendStatus(404);
+    }
+    
+    // Public资源：跳过认证
+    if (aclPolicy.visibility === 'public') {
+      req.isPublicAccess = true;
+      return next();
+    }
+    
+    // Private资源：要求认证
+    return authMiddleware(req, res, next);
+  } catch (error) {
+    console.error('Error in conditional auth:', error);
+    return res.sendStatus(500);
+  }
+}
+
+/**
  * 下载/查看对象文件
  * 支持ACL权限检查
+ * Public资源无需认证，private资源需要认证并检查权限
  */
-router.get(/^\/objects\/(.+)$/, authMiddleware, async (req, res) => {
+router.get(/^\/objects\/(.+)$/, conditionalAuth, async (req, res) => {
   try {
-    const userId = req.user!.userId.toString();
     const objectStorageService = new ObjectStorageService();
     
     // 使用正则表达式捕获组获取对象路径
     const capturedPath = req.params[0];
     const objectPath = `/objects/${capturedPath}`;
     
-    // 检查访问权限
-    const canAccess = await objectStorageService.canAccessObject({
-      objectPath,
-      userId,
-      requestedPermission: ObjectPermission.READ,
-    });
-    
-    if (!canAccess) {
-      return res.sendStatus(403);
+    // 如果是private资源，检查访问权限
+    if (!req.isPublicAccess) {
+      const userId = req.user!.userId.toString();
+      const canAccess = await objectStorageService.canAccessObject({
+        objectPath,
+        userId,
+        requestedPermission: ObjectPermission.READ,
+      });
+      
+      if (!canAccess) {
+        return res.sendStatus(403);
+      }
     }
     
     // 下载并stream文件

@@ -170,6 +170,19 @@ export const userPoints = pgTable('user_points', {
 }));
 
 /**
+ * 对象ACL策略表
+ * 存储对象存储文件的访问控制策略
+ */
+export const objectAclPolicies = pgTable('object_acl_policies', {
+  id: serial('id').primaryKey(),
+  objectPath: text('object_path').notNull().unique(), // 对象路径，如 /objects/uploads/xxx
+  owner: text('owner').notNull(), // 所有者用户ID
+  visibility: text('visibility').notNull(), // 可见性：public 或 private
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
  * 学习资料关系定义
  */
 export const learningMaterialsRelations = relations(learningMaterials, ({ one }) => ({
@@ -253,3 +266,5 @@ export type TaskSubmission = typeof taskSubmissions.$inferSelect;
 export type InsertTaskSubmission = typeof taskSubmissions.$inferInsert;
 export type UserPoint = typeof userPoints.$inferSelect;
 export type InsertUserPoint = typeof userPoints.$inferInsert;
+export type ObjectAclPolicy = typeof objectAclPolicies.$inferSelect;
+export type InsertObjectAclPolicy = typeof objectAclPolicies.$inferInsert;
