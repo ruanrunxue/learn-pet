@@ -110,17 +110,8 @@ export class ObjectStorageService {
       const aclPolicy = ObjectStorageService.aclPolicies.get(objectPath);
       const isPublic = aclPolicy?.visibility === "public";
 
-      // 下载文件为stream
-      const result = await objectStorageClient.downloadAsStream(objectKey);
-      
-      if (!result.ok) {
-        if (result.error.message.includes("not found") || result.error.message.includes("404")) {
-          throw new ObjectNotFoundError();
-        }
-        throw new Error(`Failed to download file: ${result.error.message}`);
-      }
-
-      const stream = result.value;
+      // 下载文件为stream（直接await，返回Readable）
+      const stream = await objectStorageClient.downloadAsStream(objectKey);
 
       // 设置响应头
       res.set({
@@ -145,6 +136,7 @@ export class ObjectStorageService {
       if (!res.headersSent) {
         res.status(500).json({ error: "Error downloading file" });
       }
+      throw error;
     }
   }
 
@@ -165,7 +157,7 @@ export class ObjectStorageService {
       throw new Error(`Failed to check object existence: ${result.error.message}`);
     }
 
-    const exists = result.value.some(item => item === objectKey);
+    const exists = result.value.some(item => item.path === objectKey);
     if (!exists) {
       throw new ObjectNotFoundError();
     }
@@ -280,6 +272,6 @@ export class ObjectStorageService {
       throw new Error(`Failed to list objects: ${result.error.message}`);
     }
 
-    return result.value.map(key => `/objects/${key}`);
+    return result.value.map(item => `/objects/${item.path}`);
   }
 }
