@@ -1,42 +1,17 @@
 /**
  * 对象存储服务
- * 使用Replit对象存储（基于Google Cloud Storage）来存储和检索文件
+ * 使用 @replit/object-storage（Replit App Storage）来存储和检索文件
  * 参考: blueprint:javascript_object_storage
  */
-import { Storage, File } from "@google-cloud/storage";
+import { Client } from "@replit/object-storage";
 import { Response } from "express";
 import { randomUUID } from "crypto";
-import {
-  ObjectAclPolicy,
-  ObjectPermission,
-  canAccessObject,
-  getObjectAclPolicy,
-  setObjectAclPolicy,
-} from "./objectAcl";
-
-const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
 
 /**
- * 对象存储客户端
- * 通过Replit Sidecar进行身份验证
+ * Replit对象存储客户端
+ * 自动连接到Replit的默认bucket
  */
-export const objectStorageClient = new Storage({
-  credentials: {
-    audience: "replit",
-    subject_token_type: "access_token",
-    token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
-    type: "external_account",
-    credential_source: {
-      url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
-      format: {
-        type: "json",
-        subject_token_field_name: "access_token",
-      },
-    },
-    universe_domain: "googleapis.com",
-  },
-  projectId: "",
-});
+export const objectStorageClient = new Client();
 
 /**
  * 对象未找到错误
@@ -50,47 +25,110 @@ export class ObjectNotFoundError extends Error {
 }
 
 /**
+ * 对象ACL策略
+ * 存储在对象路径的元数据中
+ */
+export interface ObjectAclPolicy {
+  owner: string;
+  visibility: "public" | "private";
+}
+
+/**
+ * 对象权限枚举
+ */
+export enum ObjectPermission {
+  READ = "read",
+  WRITE = "write",
+}
+
+/**
  * 对象存储服务类
  * 处理文件上传、下载、ACL管理等操作
  */
 export class ObjectStorageService {
+  // 存储ACL策略的内存映射 (objectPath -> ACL policy)
+  // 注意：在生产环境中应该使用数据库存储ACL策略
+  private static aclPolicies: Map<string, ObjectAclPolicy> = new Map();
+
   constructor() {}
 
   /**
-   * 获取私有对象目录
-   * 从环境变量PRIVATE_OBJECT_DIR读取
+   * 上传文件到对象存储
+   * @param buffer - 文件内容（Buffer）
+   * @param contentType - 文件MIME类型
+   * @returns 对象路径（格式: /objects/uploads/{uuid}）
    */
-  getPrivateObjectDir(): string {
-    const dir = process.env.PRIVATE_OBJECT_DIR || "";
-    if (!dir) {
-      throw new Error(
-        "PRIVATE_OBJECT_DIR not set. Create a bucket in 'Object Storage' " +
-          "tool and set PRIVATE_OBJECT_DIR env var."
-      );
+  async uploadFile(buffer: Buffer, contentType: string): Promise<string> {
+    const objectId = randomUUID();
+    const objectKey = `uploads/${objectId}`;
+    const objectPath = `/objects/${objectKey}`;
+
+    const result = await objectStorageClient.uploadFromBytes(objectKey, buffer);
+    
+    if (!result.ok) {
+      throw new Error(`Failed to upload file: ${result.error.message}`);
     }
-    return dir;
+
+    return objectPath;
+  }
+
+  /**
+   * 上传文本到对象存储
+   * @param text - 文本内容
+   * @param extension - 文件扩展名（可选）
+   * @returns 对象路径
+   */
+  async uploadText(text: string, extension: string = 'txt'): Promise<string> {
+    const objectId = randomUUID();
+    const objectKey = `uploads/${objectId}.${extension}`;
+    const objectPath = `/objects/${objectKey}`;
+
+    const result = await objectStorageClient.uploadFromText(objectKey, text);
+    
+    if (!result.ok) {
+      throw new Error(`Failed to upload text: ${result.error.message}`);
+    }
+
+    return objectPath;
   }
 
   /**
    * 下载对象文件到HTTP响应
-   * @param file - Google Cloud Storage文件对象
+   * @param objectPath - 对象路径（格式: /objects/...）
    * @param res - Express响应对象
    * @param cacheTtlSec - 缓存TTL（秒）
    */
-  async downloadObject(file: File, res: Response, cacheTtlSec: number = 3600) {
+  async downloadObject(objectPath: string, res: Response, cacheTtlSec: number = 3600) {
     try {
-      const [metadata] = await file.getMetadata();
-      const aclPolicy = await getObjectAclPolicy(file);
+      // 从路径提取objectKey
+      if (!objectPath.startsWith("/objects/")) {
+        throw new ObjectNotFoundError();
+      }
+      const objectKey = objectPath.slice("/objects/".length);
+
+      // 获取ACL策略
+      const aclPolicy = ObjectStorageService.aclPolicies.get(objectPath);
       const isPublic = aclPolicy?.visibility === "public";
+
+      // 下载文件为stream
+      const result = await objectStorageClient.downloadAsStream(objectKey);
       
+      if (!result.ok) {
+        if (result.error.message.includes("not found") || result.error.message.includes("404")) {
+          throw new ObjectNotFoundError();
+        }
+        throw new Error(`Failed to download file: ${result.error.message}`);
+      }
+
+      const stream = result.value;
+
+      // 设置响应头
       res.set({
-        "Content-Type": metadata.contentType || "application/octet-stream",
-        "Content-Length": metadata.size,
+        "Content-Type": "application/octet-stream", // 可以根据文件扩展名优化
         "Cache-Control": `${isPublic ? "public" : "private"}, max-age=${cacheTtlSec}`,
       });
 
-      const stream = file.createReadStream();
-      
+      // Stream文件到响应
       stream.on("error", (err) => {
         console.error("Stream error:", err);
         if (!res.headersSent) {
@@ -101,6 +139,9 @@ export class ObjectStorageService {
       stream.pipe(res);
     } catch (error) {
       console.error("Error downloading file:", error);
+      if (error instanceof ObjectNotFoundError) {
+        throw error;
+      }
       if (!res.headersSent) {
         res.status(500).json({ error: "Error downloading file" });
       }
@@ -108,189 +149,137 @@ export class ObjectStorageService {
   }
 
   /**
-   * 获取对象实体的上传URL和对象路径
-   * 生成一个预签名的PUT URL供客户端直接上传文件
-   * 同时返回规范化的对象路径用于后续ACL设置
-   */
-  async getObjectEntityUploadURL(): Promise<{ uploadURL: string; objectPath: string }> {
-    const privateObjectDir = this.getPrivateObjectDir();
-    const objectId = randomUUID();
-    const fullPath = `${privateObjectDir}/uploads/${objectId}`;
-
-    const { bucketName, objectName } = parseObjectPath(fullPath);
-
-    const uploadURL = await signObjectURL({
-      bucketName,
-      objectName,
-      method: "PUT",
-      ttlSec: 900,
-    });
-    
-    const objectPath = `/objects/uploads/${objectId}`;
-    
-    return { uploadURL, objectPath };
-  }
-
-  /**
-   * 从对象路径获取对象实体文件
+   * 设置对象的ACL策略
    * @param objectPath - 对象路径（格式: /objects/...）
+   * @param aclPolicy - ACL策略
    */
-  async getObjectEntityFile(objectPath: string): Promise<File> {
+  async setObjectAclPolicy(objectPath: string, aclPolicy: ObjectAclPolicy): Promise<void> {
+    // 验证对象是否存在
     if (!objectPath.startsWith("/objects/")) {
-      throw new ObjectNotFoundError();
+      throw new Error("Invalid object path");
+    }
+    const objectKey = objectPath.slice("/objects/".length);
+    
+    const result = await objectStorageClient.list();
+    if (!result.ok) {
+      throw new Error(`Failed to check object existence: ${result.error.message}`);
     }
 
-    const parts = objectPath.slice(1).split("/");
-    if (parts.length < 2) {
-      throw new ObjectNotFoundError();
-    }
-
-    const entityId = parts.slice(1).join("/");
-    let entityDir = this.getPrivateObjectDir();
-    if (!entityDir.endsWith("/")) {
-      entityDir = `${entityDir}/`;
-    }
-    const objectEntityPath = `${entityDir}${entityId}`;
-    const { bucketName, objectName } = parseObjectPath(objectEntityPath);
-    const bucket = objectStorageClient.bucket(bucketName);
-    const objectFile = bucket.file(objectName);
-    const [exists] = await objectFile.exists();
+    const exists = result.value.some(item => item === objectKey);
     if (!exists) {
       throw new ObjectNotFoundError();
     }
-    return objectFile;
+
+    // 存储ACL策略（注意：在生产环境应使用数据库）
+    ObjectStorageService.aclPolicies.set(objectPath, aclPolicy);
   }
 
   /**
-   * 规范化对象实体路径
-   * 将GCS URL转换为应用内路径
+   * 获取对象的ACL策略
+   * @param objectPath - 对象路径
    */
-  normalizeObjectEntityPath(rawPath: string): string {
-    if (!rawPath.startsWith("https://storage.googleapis.com/")) {
-      return rawPath;
-    }
-  
-    const url = new URL(rawPath);
-    const rawObjectPath = url.pathname;
-  
-    let objectEntityDir = this.getPrivateObjectDir();
-    if (!objectEntityDir.endsWith("/")) {
-      objectEntityDir = `${objectEntityDir}/`;
-    }
-  
-    if (!rawObjectPath.startsWith(objectEntityDir)) {
-      return rawObjectPath;
-    }
-  
-    const entityId = rawObjectPath.slice(objectEntityDir.length);
-    return `/objects/${entityId}`;
+  async getObjectAclPolicy(objectPath: string): Promise<ObjectAclPolicy | null> {
+    return ObjectStorageService.aclPolicies.get(objectPath) || null;
   }
 
   /**
-   * 尝试设置对象实体的ACL策略并返回规范化路径
-   * @param rawPath - 原始路径（可能是GCS URL）
-   * @param aclPolicy - ACL策略
-   */
-  async trySetObjectEntityAclPolicy(
-    rawPath: string,
-    aclPolicy: ObjectAclPolicy
-  ): Promise<string> {
-    const normalizedPath = this.normalizeObjectEntityPath(rawPath);
-    if (!normalizedPath.startsWith("/")) {
-      return normalizedPath;
-    }
-
-    const objectFile = await this.getObjectEntityFile(normalizedPath);
-    await setObjectAclPolicy(objectFile, aclPolicy);
-    return normalizedPath;
-  }
-
-  /**
-   * 检查用户是否可以访问对象实体
+   * 检查用户是否可以访问对象
    * @param userId - 用户ID
-   * @param objectFile - 对象文件
+   * @param objectPath - 对象路径
    * @param requestedPermission - 请求的权限
    */
-  async canAccessObjectEntity({
+  async canAccessObject({
     userId,
-    objectFile,
+    objectPath,
     requestedPermission,
   }: {
     userId?: string;
-    objectFile: File;
-    requestedPermission?: ObjectPermission;
+    objectPath: string;
+    requestedPermission: ObjectPermission;
   }): Promise<boolean> {
-    return canAccessObject({
-      userId,
-      objectFile,
-      requestedPermission: requestedPermission ?? ObjectPermission.READ,
-    });
-  }
-}
-
-/**
- * 解析对象路径
- * @param path - 路径（格式: /bucket_name/object_name）
- */
-function parseObjectPath(path: string): {
-  bucketName: string;
-  objectName: string;
-} {
-  if (!path.startsWith("/")) {
-    path = `/${path}`;
-  }
-  const pathParts = path.split("/");
-  if (pathParts.length < 3) {
-    throw new Error("Invalid path: must contain at least a bucket name");
-  }
-
-  const bucketName = pathParts[1];
-  const objectName = pathParts.slice(2).join("/");
-
-  return {
-    bucketName,
-    objectName,
-  };
-}
-
-/**
- * 签名对象URL
- * 通过Replit Sidecar生成预签名URL
- */
-async function signObjectURL({
-  bucketName,
-  objectName,
-  method,
-  ttlSec,
-}: {
-  bucketName: string;
-  objectName: string;
-  method: "GET" | "PUT" | "DELETE" | "HEAD";
-  ttlSec: number;
-}): Promise<string> {
-  const request = {
-    bucket_name: bucketName,
-    object_name: objectName,
-    method,
-    expires_at: new Date(Date.now() + ttlSec * 1000).toISOString(),
-  };
-  const response = await fetch(
-    `${REPLIT_SIDECAR_ENDPOINT}/object-storage/signed-object-url`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(request),
+    const aclPolicy = await this.getObjectAclPolicy(objectPath);
+    if (!aclPolicy) {
+      return false;
     }
-  );
-  if (!response.ok) {
-    throw new Error(
-      `Failed to sign object URL, errorcode: ${response.status}, ` +
-        `make sure you're running on Replit`
-    );
+
+    // 公开对象允许读取
+    if (
+      aclPolicy.visibility === "public" &&
+      requestedPermission === ObjectPermission.READ
+    ) {
+      return true;
+    }
+
+    // 访问控制需要用户ID
+    if (!userId) {
+      return false;
+    }
+
+    // 对象所有者总是可以访问
+    if (aclPolicy.owner === userId) {
+      return true;
+    }
+
+    return false;
   }
 
-  const { signed_url: signedURL } = await response.json();
-  return signedURL;
+  /**
+   * 删除对象
+   * @param objectPath - 对象路径
+   */
+  async deleteObject(objectPath: string): Promise<void> {
+    if (!objectPath.startsWith("/objects/")) {
+      throw new Error("Invalid object path");
+    }
+    const objectKey = objectPath.slice("/objects/".length);
+
+    const result = await objectStorageClient.delete(objectKey);
+    
+    if (!result.ok) {
+      throw new Error(`Failed to delete file: ${result.error.message}`);
+    }
+
+    // 删除ACL策略
+    ObjectStorageService.aclPolicies.delete(objectPath);
+  }
+
+  /**
+   * 复制对象
+   * @param sourcePath - 源对象路径
+   * @param destPath - 目标对象路径
+   */
+  async copyObject(sourcePath: string, destPath: string): Promise<void> {
+    if (!sourcePath.startsWith("/objects/") || !destPath.startsWith("/objects/")) {
+      throw new Error("Invalid object path");
+    }
+    
+    const sourceKey = sourcePath.slice("/objects/".length);
+    const destKey = destPath.slice("/objects/".length);
+
+    const result = await objectStorageClient.copy(sourceKey, destKey);
+    
+    if (!result.ok) {
+      throw new Error(`Failed to copy file: ${result.error.message}`);
+    }
+
+    // 复制ACL策略
+    const aclPolicy = ObjectStorageService.aclPolicies.get(sourcePath);
+    if (aclPolicy) {
+      ObjectStorageService.aclPolicies.set(destPath, aclPolicy);
+    }
+  }
+
+  /**
+   * 列出所有对象
+   * @returns 对象路径数组
+   */
+  async listObjects(): Promise<string[]> {
+    const result = await objectStorageClient.list();
+    
+    if (!result.ok) {
+      throw new Error(`Failed to list objects: ${result.error.message}`);
+    }
+
+    return result.value.map(key => `/objects/${key}`);
+  }
 }
