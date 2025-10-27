@@ -72,3 +72,28 @@ The project integrates with the following external services and APIs:
 3.  **Replit AI Integrations (OpenAI):**
     *   **gpt-image-1:** For generating personalized pet images during the pet adoption process.
     *   **gpt-5:** (Planned for pet conversation features).
+
+## Recent Changes
+
+### 2025-10-27 - Object Storage Refactor v2.5.0
+**Major Changes:** Migrated from @google-cloud/storage to @replit/object-storage
+
+**Improvements:**
+- ✅ Zero-config @replit/object-storage SDK integration
+- ✅ Server-side multipart upload via multer (improved security)
+- ✅ **ACL policies persisted in PostgreSQL** (object_acl_policies table)
+- ✅ Public resources accessible without authentication
+- ✅ Private resources use existing authMiddleware for compatibility
+- ✅ Deleted deprecated server/objectAcl.ts and @google-cloud/storage package
+
+**Technical Details:**
+- New: POST /api/storage/upload (multipart/form-data)
+- Removed: POST /api/storage/upload-url, POST /api/storage/confirm-upload
+- ACL storage: PostgreSQL with upsert pattern (ON CONFLICT DO UPDATE)
+- Conditional auth middleware: public files bypass auth, private files require JWT
+- Database migration: `npm run db:push` applies schema changes
+
+**Key Fixes:**
+- Server restart no longer causes 403 errors (ACL now in database)
+- Public pet images and materials accessible to all users
+- Maintains backward compatibility with existing auth flows
