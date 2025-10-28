@@ -106,3 +106,12 @@ The project integrates with the following external services and APIs:
 - H5 file upload now uses FormData with multipart/form-data
 - Better error logging with console.error for debugging
 - Improved error messages for users
+
+### 2025-10-28 - Materials Tags Fix
+**Issue:** Materials page crashed with "material.tags.map is not a function" error
+**Root Cause:** Database stores tags as text (JSON string), but backend returned them as strings instead of arrays
+**Fix:** Updated `server/routes/materials.ts` to parse tags JSON string to array before returning
+**Changes:**
+- All materials API endpoints now parse tags from JSON string to array
+- Upload endpoint stores tags as JSON.stringify()
+- Frontend now receives tags as proper array type

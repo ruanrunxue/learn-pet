@@ -1,9 +1,9 @@
-import { View, Text } from '@tarojs/components';
-import Taro from '@tarojs/taro';
-import { useState, useEffect } from 'react';
-import { request } from '../../utils/api';
-import TabBar from '../../components/TabBar';
-import './index.scss';
+import { View, Text } from "@tarojs/components";
+import Taro from "@tarojs/taro";
+import { useState, useEffect } from "react";
+import { request } from "../../utils/api";
+import TabBar from "../../components/TabBar";
+import "./index.scss";
 
 interface Material {
   id: number;
@@ -22,10 +22,10 @@ interface Material {
 export default function Materials() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState('');
+  const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
-    const role = Taro.getStorageSync('userRole');
+    const role = Taro.getStorageSync("userRole");
     setUserRole(role);
     loadMaterials();
   }, []);
@@ -34,14 +34,14 @@ export default function Materials() {
     try {
       setLoading(true);
       const data = await request<Material[]>({
-        url: '/materials',
-        method: 'GET',
+        url: "/materials",
+        method: "GET",
       });
       setMaterials(data);
     } catch (error) {
       Taro.showToast({
-        title: '加载失败',
-        icon: 'none',
+        title: "加载失败",
+        icon: "none",
       });
     } finally {
       setLoading(false);
@@ -56,7 +56,7 @@ export default function Materials() {
 
   const handleUpload = () => {
     Taro.navigateTo({
-      url: '/pages/material-upload/index',
+      url: "/pages/material-upload/index",
     });
   };
 
@@ -65,7 +65,7 @@ export default function Materials() {
       <View className="page-content">
         <View className="header">
           <Text className="title">学习资料</Text>
-          {userRole === 'teacher' && (
+          {userRole === "teacher" && (
             <View className="upload-btn" onClick={handleUpload}>
               上传资料
             </View>
@@ -104,7 +104,7 @@ export default function Materials() {
           </View>
         )}
       </View>
-      
+
       <TabBar current="/pages/materials/index" />
     </View>
   );

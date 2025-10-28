@@ -41,11 +41,17 @@ router.post('/upload', authMiddleware, async (req, res) => {
         name,
         fileType,
         fileUrl,
-        tags: tags || [],
+        tags: JSON.stringify(tags || []),
       })
       .returning();
 
-    res.status(201).json(material);
+    // 将tags字段从字符串转换为数组再返回
+    const materialWithParsedTags = {
+      ...material,
+      tags: typeof material.tags === 'string' ? JSON.parse(material.tags) : material.tags,
+    };
+
+    res.status(201).json(materialWithParsedTags);
   } catch (error) {
     console.error('Error uploading material:', error);
     res.status(500).json({ error: 'Failed to upload material' });
@@ -83,7 +89,13 @@ router.get('/', authMiddleware, async (req, res) => {
         .orderBy(sql`${learningMaterials.createdAt} DESC`);
     }
 
-    res.json(materials);
+    // 将tags字段从字符串转换为数组
+    const materialsWithParsedTags = materials.map(material => ({
+      ...material,
+      tags: typeof material.tags === 'string' ? JSON.parse(material.tags) : material.tags,
+    }));
+
+    res.json(materialsWithParsedTags);
   } catch (error) {
     console.error('Error fetching materials:', error);
     res.status(500).json({ error: 'Failed to fetch materials' });
@@ -110,7 +122,13 @@ router.get('/teacher/my-materials', authMiddleware, async (req, res) => {
       .where(eq(learningMaterials.teacherId, userId))
       .orderBy(sql`${learningMaterials.createdAt} DESC`);
 
-    res.json(materials);
+    // 将tags字段从字符串转换为数组
+    const materialsWithParsedTags = materials.map(material => ({
+      ...material,
+      tags: typeof material.tags === 'string' ? JSON.parse(material.tags) : material.tags,
+    }));
+
+    res.json(materialsWithParsedTags);
   } catch (error) {
     console.error('Error fetching teacher materials:', error);
     res.status(500).json({ error: 'Failed to fetch materials' });
@@ -135,7 +153,13 @@ router.get('/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Material not found' });
     }
 
-    res.json(material[0]);
+    // 将tags字段从字符串转换为数组
+    const materialWithParsedTags = {
+      ...material[0],
+      tags: typeof material[0].tags === 'string' ? JSON.parse(material[0].tags) : material[0].tags,
+    };
+
+    res.json(materialWithParsedTags);
   } catch (error) {
     console.error('Error fetching material:', error);
     res.status(500).json({ error: 'Failed to fetch material' });
