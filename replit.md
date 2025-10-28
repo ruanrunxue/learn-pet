@@ -97,3 +97,12 @@ The project integrates with the following external services and APIs:
 - Server restart no longer causes 403 errors (ACL now in database)
 - Public pet images and materials accessible to all users
 - Maintains backward compatibility with existing auth flows
+
+### 2025-10-28 - Frontend Upload Fix
+**Issue:** Material upload page failed with "请求失败" error
+**Root Cause:** Frontend still used deprecated APIs (`/storage/upload-url`, `/storage/confirm-upload`)
+**Fix:** Updated `src/pages/material-upload/index.tsx` to use new multipart upload API (`/api/storage/upload`)
+**Changes:**
+- H5 file upload now uses FormData with multipart/form-data
+- Better error logging with console.error for debugging
+- Improved error messages for users

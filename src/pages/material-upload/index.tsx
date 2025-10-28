@@ -73,47 +73,41 @@ export default function MaterialUpload() {
 
   /**
    * 上传文件（H5环境）
+   * 使用新的multipart上传接口
    */
   const uploadFile = async (file: File) => {
     try {
       setUploading(true);
 
-      // 1. 获取上传URL
-      const { uploadURL, objectPath } = await request<{ uploadURL: string; objectPath: string }>({
-        url: '/storage/upload-url',
-        method: 'POST',
-        data: {
-          fileName: file.name,
-          contentType: file.type || 'application/octet-stream',
-        },
-      });
+      // 构建FormData
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('visibility', 'public'); // 学习资料设为公开
 
-      // 2. 上传文件到对象存储
-      const uploadResponse = await fetch(uploadURL, {
-        method: 'PUT',
-        body: file,
+      // 使用multipart上传
+      const token = Taro.getStorageSync('token');
+      const uploadResponse = await fetch('/api/storage/upload', {
+        method: 'POST',
+        body: formData,
         headers: {
-          'Content-Type': file.type || 'application/octet-stream',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('文件上传失败');
+        const errorData = await uploadResponse.json();
+        throw new Error(errorData.error || '文件上传失败');
       }
 
-      // 3. 确认上传并设置ACL
-      const { downloadUrl } = await request<{ downloadUrl: string }>({
-        url: '/storage/confirm-upload',
-        method: 'POST',
-        data: {
-          objectPath,
-          acl: 'public', // 学习资料设为公开
-        },
-      });
+      const { objectPath } = await uploadResponse.json();
+      
+      // 构建下载URL
+      const downloadUrl = objectPath;
 
       setUploadedFile({ url: downloadUrl, name: file.name });
       Taro.showToast({ title: '文件上传成功', icon: 'success' });
     } catch (error: any) {
+      console.error('Upload error:', error);
       Taro.showToast({
         title: error.message || '上传失败',
         icon: 'none',
