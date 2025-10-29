@@ -23,12 +23,15 @@
 
     .action-buttons {
       display: flex;
+      align-items: center;
       gap: 10px;
 
       .delete-btn, .upload-btn {
         min-width: 100px;
         height: 36px;
         font-size: 14px;
+        line-height: 36px;
+        padding: 0 16px;
       }
 
       .delete-btn {

@@ -31,9 +31,9 @@ export default function MaterialDetail() {
     setUserRole(role);
     setUserId(user?.id || 0);
 
-    const pages = Taro.getCurrentPages();
-    const currentPage = pages[pages.length - 1];
-    const materialId = currentPage.options?.id;
+    // 获取路由参数（H5和小程序通用）
+    const instance = Taro.getCurrentInstance();
+    const materialId = instance.router?.params?.id;
 
     if (materialId) {
       loadMaterial(Number(materialId));

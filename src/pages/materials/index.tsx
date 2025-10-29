@@ -112,7 +112,9 @@ export default function Materials() {
   };
 
   // 处理全选
-  const handleSelectAll = (checked: boolean) => {
+  const handleSelectAll = (e: any) => {
+    const values = e.detail.value as string[];
+    const checked = values.length > 0;
     setSelectAll(checked);
     if (checked) {
       const allIds = new Set(getCurrentPageData().map(m => m.id));
@@ -123,7 +125,9 @@ export default function Materials() {
   };
 
   // 处理单选
-  const handleSelectItem = (id: number, checked: boolean) => {
+  const handleSelectItem = (id: number, e: any) => {
+    const values = e.detail.value as string[];
+    const checked = values.includes(id.toString());
     const newSelectedIds = new Set(selectedIds);
     if (checked) {
       newSelectedIds.add(id);
@@ -241,8 +245,9 @@ export default function Materials() {
                   {userRole === "teacher" && (
                     <View className="table-cell checkbox-cell">
                       <Checkbox
+                        value="all"
                         checked={selectAll}
-                        onChange={(e) => handleSelectAll(e.detail.value)}
+                        onChange={handleSelectAll}
                       />
                     </View>
                   )}
@@ -269,8 +274,9 @@ export default function Materials() {
                     {userRole === "teacher" && (
                       <View className="table-cell checkbox-cell" onClick={(e) => e.stopPropagation()}>
                         <Checkbox
+                          value={material.id.toString()}
                           checked={selectedIds.has(material.id)}
-                          onChange={(e) => handleSelectItem(material.id, e.detail.value)}
+                          onChange={(e) => handleSelectItem(material.id, e)}
                         />
                       </View>
                     )}
