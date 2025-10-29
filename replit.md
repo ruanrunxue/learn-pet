@@ -39,9 +39,25 @@ The application is built with a modern web stack, featuring a cross-platform fro
     *   Students can submit tasks, automatically earning points upon submission.
     *   Comprehensive permission validation ensures teachers manage their own classes' tasks and students interact with their assigned tasks.
 
-5.  **Learning Materials Management:**
-    *   Teachers can upload learning materials (with attachments and tags).
-    *   Materials are searchable and filterable by tags.
+5.  **Learning Materials Management (Enhanced Table Interface):**
+    *   Teachers can upload learning materials with attachments and tags.
+    *   **Full-featured table interface with:**
+      - Search by ID and material name
+      - Filter by tags
+      - Sort by ID, name, or file type
+      - Pagination (10/20/50/100 rows per page)
+      - Batch selection and deletion
+      - Click row to view details
+    *   **Enhanced upload page:**
+      - Drag-and-drop file upload (H5)
+      - Tag input with Enter key confirmation
+      - Colored rounded tag badges
+      - File type auto-detection and display
+    *   **File management:**
+      - Auto-extraction of file extensions (.pdf, .mp4, .docx, etc.)
+      - Support for documents, videos, audio, images, and compressed files
+      - 50MB file size limit
+      - Public access to all learning materials
 
 6.  **Points System:**
     *   Students earn points by completing tasks.
@@ -74,6 +90,59 @@ The project integrates with the following external services and APIs:
     *   **gpt-5:** (Planned for pet conversation features).
 
 ## Recent Changes
+
+### 2025-10-29 - Materials Management Complete Redesign v3.0.0
+**Major Upgrade:** Transformed materials management into a full-featured table interface with comprehensive data management capabilities
+
+**Frontend Enhancements:**
+
+1. **Materials List Page (src/pages/materials/index.tsx)**
+   - ✅ Full table layout replacing card-based interface
+   - ✅ Columns: ID, Material Name, File Type (extension), Tags
+   - ✅ Search functionality (by ID and name)
+   - ✅ Tag filtering with dropdown
+   - ✅ Column sorting (ID, Name, Type)
+   - ✅ Pagination controls (10/20/50/100 rows per page)
+   - ✅ Batch selection with checkboxes
+   - ✅ Batch delete with confirmation dialog
+   - ✅ Click row to navigate to detail page
+
+2. **Upload Page (src/pages/material-upload/index.tsx)**
+   - ✅ Drag-and-drop file upload (H5 environment)
+   - ✅ Click to browse file upload
+   - ✅ Tag input with Enter key to confirm
+   - ✅ Colorful rounded tag badges (gradient purple)
+   - ✅ Visual file type display with extension
+   - ✅ Auto-fill material name from filename
+   - ✅ File size limit (50MB)
+   - ✅ Support for multiple file formats (documents, videos, audio, images, archives)
+
+3. **Detail Page (src/pages/material-detail/index.tsx)**
+   - ✅ Download functionality
+   - ✅ Delete functionality (owner only)
+   - Simple and clean interface
+
+**Backend Updates:**
+
+1. **Database Schema (shared/schema.ts)**
+   - ✅ Added `fileExtension` field to `learning_materials` table
+   - Stores file extension (e.g., .pdf, .mp4, .docx) for better categorization
+
+2. **Materials API (server/routes/materials.ts)**
+   - ✅ Batch delete endpoint: `DELETE /api/materials/batch/delete`
+   - ✅ Route ordering fix: batch delete route now declared before `/:id` to prevent shadowing
+   - ✅ Auto-extraction of file extension during upload
+   - ✅ All endpoints return `fileExtension` field
+   - ✅ Proper tags parsing (JSON string → array) in all responses
+
+**Technical Improvements:**
+- Fixed critical route shadowing bug (batch delete must be before /:id)
+- Enhanced error handling and validation
+- Improved data consistency between frontend and backend
+- Better file type management with dedicated extension field
+
+**Migration:**
+- Run `npm run db:push` to apply schema changes (adds fileExtension column)
 
 ### 2025-10-27 - Object Storage Refactor v2.5.0
 **Major Changes:** Migrated from @google-cloud/storage to @replit/object-storage
