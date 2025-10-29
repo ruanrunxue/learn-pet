@@ -33,6 +33,9 @@ router.post('/upload', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'name, fileType, and fileUrl are required' });
     }
 
+    // 从fileUrl提取文件后缀
+    const fileExtension = fileUrl.substring(fileUrl.lastIndexOf('.')).toLowerCase() || '';
+
     // 创建学习资料记录
     const [material] = await db
       .insert(learningMaterials)
@@ -40,6 +43,7 @@ router.post('/upload', authMiddleware, async (req, res) => {
         teacherId: userId,
         name,
         fileType,
+        fileExtension,
         fileUrl,
         tags: JSON.stringify(tags || []),
       })
@@ -132,6 +136,65 @@ router.get('/teacher/my-materials', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error fetching teacher materials:', error);
     res.status(500).json({ error: 'Failed to fetch materials' });
+  }
+});
+
+/**
+ * 批量删除学习资料
+ * DELETE /api/materials/batch/delete
+ * Body: { ids: number[] }
+ * 注意：此路由必须在 /:id 路由之前定义，否则会被遮挡
+ */
+router.delete('/batch/delete', authMiddleware, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    const userId = req.user!.userId;
+    const role = req.user!.role;
+
+    // 验证角色：只有教师可以删除学习资料
+    if (role !== 'teacher') {
+      return res.status(403).json({ error: 'Only teachers can delete materials' });
+    }
+
+    // 验证ids是数组
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids must be a non-empty array' });
+    }
+
+    // 验证所有资料的所有权
+    const materials = await db
+      .select()
+      .from(learningMaterials)
+      .where(
+        and(
+          sql`${learningMaterials.id} = ANY(${sql`ARRAY[${sql.join(ids.map(id => sql`${id}`), sql`, `)}]::integer[]`})`,
+          eq(learningMaterials.teacherId, userId)
+        )
+      );
+
+    // 如果找到的资料数量不等于请求的数量，说明有些资料不存在或没有权限
+    if (materials.length !== ids.length) {
+      return res.status(403).json({ 
+        error: 'Some materials not found or you do not have permission to delete them',
+        deletedCount: 0
+      });
+    }
+
+    // 批量删除
+    await db
+      .delete(learningMaterials)
+      .where(
+        sql`${learningMaterials.id} = ANY(${sql`ARRAY[${sql.join(ids.map(id => sql`${id}`), sql`, `)}]::integer[]`})`
+      );
+
+    res.json({ 
+      success: true, 
+      message: `${ids.length} materials deleted successfully`,
+      deletedCount: ids.length
+    });
+  } catch (error) {
+    console.error('Error batch deleting materials:', error);
+    res.status(500).json({ error: 'Failed to delete materials' });
   }
 });
 

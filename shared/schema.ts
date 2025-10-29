@@ -91,6 +91,7 @@ export const learningMaterials = pgTable('learning_materials', {
   teacherId: integer('teacher_id').notNull().references(() => users.id),
   name: text('name').notNull(),
   fileType: text('file_type').notNull(),
+  fileExtension: text('file_extension').notNull().default(''),
   fileUrl: text('file_url').notNull(),
   tags: text('tags').notNull().default('[]'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
