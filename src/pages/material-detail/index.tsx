@@ -1,4 +1,4 @@
-import { View, Text, Button } from '@tarojs/components';
+import { View, Text, Button, Image, Video } from '@tarojs/components';
 import Taro, { useLoad } from '@tarojs/taro';
 import { useState } from 'react';
 import { request } from '../../utils/api';
@@ -10,6 +10,7 @@ interface Material {
   name: string;
   fileType: string;
   fileUrl: string;
+  fileExtension: string;
   tags: string[];
   createdAt: string;
   teacherName?: string;
@@ -17,7 +18,7 @@ interface Material {
 
 /**
  * 学习资料详情页面
- * 显示资料详细信息，支持下载和删除（教师）
+ * 支持图片预览、音频播放、视频播放、文件下载
  */
 export default function MaterialDetail() {
   const [material, setMaterial] = useState<Material | null>(null);
@@ -66,14 +67,41 @@ export default function MaterialDetail() {
   };
 
   /**
+   * 获取文件访问URL（添加API前缀）
+   */
+  const getFileUrl = (fileUrl: string) => {
+    if (fileUrl.startsWith('/objects/')) {
+      return `/api/storage${fileUrl}`;
+    }
+    return fileUrl;
+  };
+
+  /**
+   * 判断文件类型
+   */
+  const getMediaType = (extension: string) => {
+    const ext = extension.toLowerCase();
+    const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+    const videoExts = ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm'];
+    const audioExts = ['.mp3', '.wav', '.ogg', '.m4a', '.aac'];
+
+    if (imageExts.includes(ext)) return 'image';
+    if (videoExts.includes(ext)) return 'video';
+    if (audioExts.includes(ext)) return 'audio';
+    return 'other';
+  };
+
+  /**
    * 下载资料
    */
   const handleDownload = () => {
     if (!material) return;
 
+    const downloadUrl = getFileUrl(material.fileUrl);
+
     // H5环境直接打开链接
     if (process.env.TARO_ENV === 'h5') {
-      window.open(material.fileUrl, '_blank');
+      window.open(downloadUrl, '_blank');
     } else {
       // 小程序环境提示用户
       Taro.showModal({
@@ -83,7 +111,7 @@ export default function MaterialDetail() {
         success: (res) => {
           if (res.confirm) {
             Taro.setClipboardData({
-              data: material.fileUrl,
+              data: downloadUrl,
               success: () => {
                 Taro.showToast({ title: '链接已复制', icon: 'success' });
               },
@@ -140,15 +168,9 @@ export default function MaterialDetail() {
     );
   }
 
-  const fileTypeMap = {
-    document: '📄 文档',
-    video: '🎬 视频',
-    audio: '🎵 音频',
-    image: '🖼️ 图片',
-    other: '📎 其他',
-  };
-
   const isOwner = userRole === 'teacher' && userId === material.teacherId;
+  const mediaType = getMediaType(material.fileExtension);
+  const fileUrl = getFileUrl(material.fileUrl);
 
   return (
     <View className="material-detail-container">
@@ -156,9 +178,57 @@ export default function MaterialDetail() {
         <View className="header">
           <Text className="title">{material.name}</Text>
           <Text className="file-type">
-            {fileTypeMap[material.fileType] || '📎 其他'}
+            {material.fileExtension || '未知格式'}
           </Text>
         </View>
+
+        {/* 在线预览区域 */}
+        {mediaType === 'image' && (
+          <View className="preview-section">
+            <Text className="preview-title">图片预览</Text>
+            <Image 
+              className="preview-image" 
+              src={fileUrl} 
+              mode="widthFix"
+              onClick={() => {
+                if (process.env.TARO_ENV === 'h5') {
+                  window.open(fileUrl, '_blank');
+                } else {
+                  Taro.previewImage({
+                    urls: [fileUrl],
+                    current: fileUrl,
+                  });
+                }
+              }}
+            />
+          </View>
+        )}
+
+        {mediaType === 'video' && (
+          <View className="preview-section">
+            <Text className="preview-title">视频播放</Text>
+            <Video
+              className="preview-video"
+              src={fileUrl}
+              controls
+              poster=""
+              initialTime={0}
+              showPlayBtn
+              showCenterPlayBtn
+            />
+          </View>
+        )}
+
+        {mediaType === 'audio' && (
+          <View className="preview-section">
+            <Text className="preview-title">音频播放</Text>
+            <View className="audio-player">
+              <audio controls src={fileUrl} className="audio-element">
+                您的浏览器不支持音频播放
+              </audio>
+            </View>
+          </View>
+        )}
 
         {material.tags.length > 0 && (
           <View className="tags-section">
@@ -186,6 +256,10 @@ export default function MaterialDetail() {
               <Text className="info-value">{material.teacherName}</Text>
             </View>
           )}
+          <View className="info-item">
+            <Text className="info-label">文件类型</Text>
+            <Text className="info-value">{material.fileExtension}</Text>
+          </View>
         </View>
       </View>
 

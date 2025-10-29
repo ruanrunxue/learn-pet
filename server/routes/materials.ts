@@ -19,7 +19,7 @@ const router = Router();
  */
 router.post('/upload', authMiddleware, async (req, res) => {
   try {
-    const { name, fileType, fileUrl, tags } = req.body;
+    const { name, fileType, fileUrl, fileExtension: clientFileExtension, tags } = req.body;
     const userId = req.user!.userId;
     const role = req.user!.role;
 
@@ -33,8 +33,8 @@ router.post('/upload', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'name, fileType, and fileUrl are required' });
     }
 
-    // 从fileUrl提取文件后缀
-    const fileExtension = fileUrl.substring(fileUrl.lastIndexOf('.')).toLowerCase() || '';
+    // 使用客户端传来的文件扩展名，如果没有则尝试从URL提取
+    const fileExtension = clientFileExtension || fileUrl.substring(fileUrl.lastIndexOf('.')).toLowerCase() || '';
 
     // 创建学习资料记录
     const [material] = await db

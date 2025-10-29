@@ -15,7 +15,6 @@ export default function MaterialUpload() {
   const [uploading, setUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<{ url: string; name: string; extension: string } | null>(null);
   const [dragOver, setDragOver] = useState(false);
-  const dropZoneRef = useRef<HTMLDivElement | null>(null);
 
   // 检查用户角色
   useLoad(() => {
@@ -101,7 +100,7 @@ export default function MaterialUpload() {
       Taro.chooseMessageFile({
         count: 1,
         type: 'file',
-        success: async (res) => {
+        success: async () => {
           Taro.showModal({
             title: '提示',
             content: '小程序文件上传功能正在完善中，请使用H5版本',
@@ -194,8 +193,9 @@ export default function MaterialUpload() {
         method: 'POST',
         data: {
           name: name.trim(),
-          fileType: 'other', // 这个字段可以保留，但主要使用fileExtension
+          fileType: 'other',
           fileUrl: uploadedFile.url,
+          fileExtension: uploadedFile.extension, // 传递文件扩展名
           tags: tagsList,
         },
       });
