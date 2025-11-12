@@ -124,8 +124,8 @@ export default function MaterialUpload() {
       setUploading(true);
 
       // 检查文件大小（限制50MB）
-      if (file.size > 50 * 1024 * 1024) {
-        throw new Error("文件大小不能超过50MB");
+      if (file.size > 1 * 1024 * 1024 * 1024) {
+        throw new Error("文件大小不能超过1GB");
       }
       console.log(file);
 
