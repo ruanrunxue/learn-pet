@@ -255,7 +255,7 @@ export default function MaterialUpload() {
                   支持 Word, Excel, PPT, PDF, JPG, PNG, GIF, MP3, WAV, MP4, AVI,
                   MOV, ZIP, RAR
                 </Text>
-                <Text className="upload-size">文件大小限制：50MB</Text>
+                <Text className="upload-size">文件大小限制：1GB</Text>
               </View>
             )}
           </View>
