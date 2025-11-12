@@ -75,6 +75,7 @@
         height: 400px;
         border-radius: 8px;
         background-color: #000;
+        position: relative;
       }
 
       .audio-player {
@@ -160,6 +161,11 @@
       background-color: #ff4d4f;
       color: white;
       border: 1px solid #ff4d4f;
+      margin-top: 0px;
+    }
+
+    .download-btn {
+      margin-top: 0px;
     }
   }
 }

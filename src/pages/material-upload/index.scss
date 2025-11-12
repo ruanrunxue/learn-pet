@@ -205,13 +205,15 @@
     gap: 12px;
     justify-content: flex-end;
 
-    .cancel-btn, .submit-btn {
+    .cancel-btn,
+    .submit-btn {
       min-width: 100px;
       height: 40px;
       font-size: 15px;
     }
 
     .cancel-btn {
+      margin-top: 0px;
       background-color: white;
       border: 1px solid #d9d9d9;
       color: #666;
@@ -223,10 +225,16 @@
     }
 
     .submit-btn {
-      &:disabled {
-        background-color: #d9d9d9;
-        color: rgba(0, 0, 0, 0.25);
+      margin-top: 0px;
+      background-color: #1aad19;
+      color: white;
+      border: 1px solid #d9d9d9;
+
+      &:hover {
+        border-color: #1890ff;
+        color: #1890ff;
       }
+
     }
   }
 }

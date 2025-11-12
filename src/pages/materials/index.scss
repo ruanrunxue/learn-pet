@@ -26,12 +26,16 @@
       align-items: center;
       gap: 10px;
 
-      .delete-btn, .upload-btn {
+      .delete-btn,
+      .upload-btn {
         min-width: 100px;
         height: 36px;
         font-size: 14px;
         line-height: 36px;
         padding: 0 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .delete-btn {
@@ -44,6 +48,10 @@
           color: rgba(0, 0, 0, 0.25);
         }
       }
+
+      .upload-btn {
+        margin-top: 0px;
+      }
     }
   }
 
@@ -53,7 +61,8 @@
     margin-bottom: 20px;
     flex-wrap: wrap;
 
-    .search-input, .filter-input {
+    .search-input,
+    .filter-input {
       flex: 1;
       min-width: 200px;
       padding: 10px;
@@ -90,7 +99,8 @@
     .table {
       min-width: 800px;
 
-      .table-header, .table-row {
+      .table-header,
+      .table-row {
         display: flex;
         align-items: center;
         border-bottom: 1px solid #f0f0f0;

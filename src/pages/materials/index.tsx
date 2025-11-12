@@ -1,4 +1,11 @@
-import { View, Text, Input, Button, Checkbox } from "@tarojs/components";
+import {
+  View,
+  Text,
+  Input,
+  Button,
+  Checkbox,
+  CheckboxGroup,
+} from "@tarojs/components";
 import Taro from "@tarojs/taro";
 import { useState, useEffect } from "react";
 import { request } from "../../utils/api";
@@ -25,19 +32,21 @@ export default function Materials() {
   const [filteredMaterials, setFilteredMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState("");
-  
+
   // 选择相关
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
-  
+
   // 搜索筛选
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterTag, setFilterTag] = useState("");
-  
+
   // 排序
-  const [sortField, setSortField] = useState<'id' | 'name' | 'fileExtension'>('id');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  
+  const [sortField, setSortField] = useState<"id" | "name" | "fileExtension">(
+    "id",
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
   // 分页
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -52,35 +61,38 @@ export default function Materials() {
   useEffect(() => {
     // 应用搜索、筛选、排序
     let result = [...materials];
-    
+
     // 搜索
     if (searchKeyword) {
-      result = result.filter(m => 
-        m.name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        m.id.toString().includes(searchKeyword)
+      result = result.filter(
+        (m) =>
+          m.name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+          m.id.toString().includes(searchKeyword),
       );
     }
-    
+
     // 标签筛选
     if (filterTag) {
-      result = result.filter(m => 
-        m.tags.some(tag => tag.toLowerCase().includes(filterTag.toLowerCase()))
+      result = result.filter((m) =>
+        m.tags.some((tag) =>
+          tag.toLowerCase().includes(filterTag.toLowerCase()),
+        ),
       );
     }
-    
+
     // 排序
     result.sort((a, b) => {
       let compareValue = 0;
-      if (sortField === 'id') {
+      if (sortField === "id") {
         compareValue = a.id - b.id;
-      } else if (sortField === 'name') {
+      } else if (sortField === "name") {
         compareValue = a.name.localeCompare(b.name);
-      } else if (sortField === 'fileExtension') {
+      } else if (sortField === "fileExtension") {
         compareValue = a.fileExtension.localeCompare(b.fileExtension);
       }
-      return sortOrder === 'asc' ? compareValue : -compareValue;
+      return sortOrder === "asc" ? compareValue : -compareValue;
     });
-    
+
     setFilteredMaterials(result);
     setTotalPages(Math.ceil(result.length / pageSize));
     setCurrentPage(1);
@@ -117,7 +129,7 @@ export default function Materials() {
     const checked = values.length > 0;
     setSelectAll(checked);
     if (checked) {
-      const allIds = new Set(getCurrentPageData().map(m => m.id));
+      const allIds = new Set(getCurrentPageData().map((m) => m.id));
       setSelectedIds(allIds);
     } else {
       setSelectedIds(new Set());
@@ -139,17 +151,18 @@ export default function Materials() {
   };
 
   // 处理排序
-  const handleSort = (field: 'id' | 'name' | 'fileExtension') => {
+  const handleSort = (field: "id" | "name" | "fileExtension") => {
     if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
-      setSortOrder('asc');
+      setSortOrder("asc");
     }
   };
 
   // 处理行点击
   const handleRowClick = (material: Material) => {
+    console.log(selectedIds);
     Taro.navigateTo({
       url: `/pages/material-detail/index?id=${material.id}`,
     });
@@ -203,10 +216,18 @@ export default function Materials() {
           <Text className="title">学习资料管理</Text>
           {userRole === "teacher" && (
             <View className="action-buttons">
-              <Button className="delete-btn" onClick={handleBatchDelete} disabled={selectedIds.size === 0}>
+              <Button
+                className="delete-btn"
+                onClick={handleBatchDelete}
+                disabled={selectedIds.size === 0}
+              >
                 删除 ({selectedIds.size})
               </Button>
-              <Button className="upload-btn" type="primary" onClick={handleUpload}>
+              <Button
+                className="upload-btn"
+                type="primary"
+                onClick={handleUpload}
+              >
                 上传资料
               </Button>
             </View>
@@ -244,21 +265,30 @@ export default function Materials() {
                 <View className="table-header">
                   {userRole === "teacher" && (
                     <View className="table-cell checkbox-cell">
-                      <Checkbox
-                        value="all"
-                        checked={selectAll}
-                        onChange={handleSelectAll}
-                      />
+                      <CheckboxGroup onChange={handleSelectAll}>
+                        <Checkbox value="all" checked={selectAll} />
+                      </CheckboxGroup>
                     </View>
                   )}
-                  <View className="table-cell id-cell" onClick={() => handleSort('id')}>
-                    <Text>资料ID {sortField === 'id' && (sortOrder === 'asc' ? '↑' : '↓')}</Text>
+                  <View
+                    className="table-cell name-cell"
+                    onClick={() => handleSort("name")}
+                  >
+                    <Text>
+                      资料名{" "}
+                      {sortField === "name" &&
+                        (sortOrder === "asc" ? "↑" : "↓")}
+                    </Text>
                   </View>
-                  <View className="table-cell name-cell" onClick={() => handleSort('name')}>
-                    <Text>资料名 {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}</Text>
-                  </View>
-                  <View className="table-cell type-cell" onClick={() => handleSort('fileExtension')}>
-                    <Text>类型 {sortField === 'fileExtension' && (sortOrder === 'asc' ? '↑' : '↓')}</Text>
+                  <View
+                    className="table-cell type-cell"
+                    onClick={() => handleSort("fileExtension")}
+                  >
+                    <Text>
+                      类型{" "}
+                      {sortField === "fileExtension" &&
+                        (sortOrder === "asc" ? "↑" : "↓")}
+                    </Text>
                   </View>
                   <View className="table-cell tags-cell">
                     <Text>标签</Text>
@@ -267,29 +297,45 @@ export default function Materials() {
 
                 {/* 表体 */}
                 {getCurrentPageData().map((material) => (
-                  <View 
-                    key={material.id} 
-                    className={`table-row ${selectedIds.has(material.id) ? 'selected' : ''}`}
+                  <View
+                    key={material.id}
+                    className={`table-row ${selectedIds.has(material.id) ? "selected" : ""}`}
                   >
                     {userRole === "teacher" && (
-                      <View className="table-cell checkbox-cell" onClick={(e) => e.stopPropagation()}>
-                        <Checkbox
-                          value={material.id.toString()}
-                          checked={selectedIds.has(material.id)}
+                      <View
+                        className="table-cell checkbox-cell"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <CheckboxGroup
                           onChange={(e) => handleSelectItem(material.id, e)}
-                        />
+                        >
+                          <Checkbox
+                            value={material.id.toString()}
+                            checked={selectedIds.has(material.id)}
+                          />
+                        </CheckboxGroup>
                       </View>
                     )}
-                    <View className="table-cell id-cell" onClick={() => handleRowClick(material)}>
-                      <Text>{material.id}</Text>
+                    <View
+                      className="table-cell name-cell"
+                      onClick={() => handleRowClick(material)}
+                    >
+                      <Text className="material-name-text">
+                        {material.name}
+                      </Text>
                     </View>
-                    <View className="table-cell name-cell" onClick={() => handleRowClick(material)}>
-                      <Text className="material-name-text">{material.name}</Text>
+                    <View
+                      className="table-cell type-cell"
+                      onClick={() => handleRowClick(material)}
+                    >
+                      <Text className="file-extension">
+                        {material.fileExtension || "-"}
+                      </Text>
                     </View>
-                    <View className="table-cell type-cell" onClick={() => handleRowClick(material)}>
-                      <Text className="file-extension">{material.fileExtension || '-'}</Text>
-                    </View>
-                    <View className="table-cell tags-cell" onClick={() => handleRowClick(material)}>
+                    <View
+                      className="table-cell tags-cell"
+                      onClick={() => handleRowClick(material)}
+                    >
                       <View className="tags">
                         {material.tags && material.tags.length > 0 ? (
                           material.tags.map((tag, index) => (
@@ -312,10 +358,10 @@ export default function Materials() {
               <View className="page-size-selector">
                 <Text>每页显示：</Text>
                 <View className="size-options">
-                  {[10, 20, 50, 100].map(size => (
+                  {[10, 20, 50, 100].map((size) => (
                     <Text
                       key={size}
-                      className={`size-option ${pageSize === size ? 'active' : ''}`}
+                      className={`size-option ${pageSize === size ? "active" : ""}`}
                       onClick={() => setPageSize(size)}
                     >
                       {size}

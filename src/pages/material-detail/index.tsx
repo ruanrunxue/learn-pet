@@ -1,8 +1,8 @@
-import { View, Text, Button, Image, Video } from '@tarojs/components';
-import Taro, { useLoad } from '@tarojs/taro';
-import { useState } from 'react';
-import { request } from '../../utils/api';
-import './index.scss';
+import { View, Text, Button, Image, Video } from "@tarojs/components";
+import Taro, { useLoad } from "@tarojs/taro";
+import { useState } from "react";
+import { request } from "../../utils/api";
+import "./index.scss";
 
 interface Material {
   id: number;
@@ -23,12 +23,12 @@ interface Material {
 export default function MaterialDetail() {
   const [material, setMaterial] = useState<Material | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState('');
+  const [userRole, setUserRole] = useState("");
   const [userId, setUserId] = useState(0);
 
   useLoad(() => {
-    const role = Taro.getStorageSync('userRole');
-    const user = Taro.getStorageSync('user');
+    const role = Taro.getStorageSync("userRole");
+    const user = Taro.getStorageSync("user");
     setUserRole(role);
     setUserId(user?.id || 0);
 
@@ -39,7 +39,7 @@ export default function MaterialDetail() {
     if (materialId) {
       loadMaterial(Number(materialId));
     } else {
-      Taro.showToast({ title: '资料ID缺失', icon: 'none' });
+      Taro.showToast({ title: "资料ID缺失", icon: "none" });
       setTimeout(() => Taro.navigateBack(), 1500);
     }
   });
@@ -52,13 +52,13 @@ export default function MaterialDetail() {
       setLoading(true);
       const data = await request<Material>({
         url: `/materials/${id}`,
-        method: 'GET',
+        method: "GET",
       });
       setMaterial(data);
     } catch (error: any) {
       Taro.showToast({
-        title: error.message || '加载失败',
-        icon: 'none',
+        title: error.message || "加载失败",
+        icon: "none",
       });
       setTimeout(() => Taro.navigateBack(), 1500);
     } finally {
@@ -70,7 +70,7 @@ export default function MaterialDetail() {
    * 获取文件访问URL（添加API前缀）
    */
   const getFileUrl = (fileUrl: string) => {
-    if (fileUrl.startsWith('/objects/')) {
+    if (fileUrl.startsWith("/objects/")) {
       return `/api/storage${fileUrl}`;
     }
     return fileUrl;
@@ -81,14 +81,14 @@ export default function MaterialDetail() {
    */
   const getMediaType = (extension: string) => {
     const ext = extension.toLowerCase();
-    const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
-    const videoExts = ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm'];
-    const audioExts = ['.mp3', '.wav', '.ogg', '.m4a', '.aac'];
+    const imageExts = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"];
+    const videoExts = [".mp4", ".avi", ".mov", ".wmv", ".flv", ".webm"];
+    const audioExts = [".mp3", ".wav", ".ogg", ".m4a", ".aac"];
 
-    if (imageExts.includes(ext)) return 'image';
-    if (videoExts.includes(ext)) return 'video';
-    if (audioExts.includes(ext)) return 'audio';
-    return 'other';
+    if (imageExts.includes(ext)) return "image";
+    if (videoExts.includes(ext)) return "video";
+    if (audioExts.includes(ext)) return "audio";
+    return "other";
   };
 
   /**
@@ -100,20 +100,20 @@ export default function MaterialDetail() {
     const downloadUrl = getFileUrl(material.fileUrl);
 
     // H5环境直接打开链接
-    if (process.env.TARO_ENV === 'h5') {
-      window.open(downloadUrl, '_blank');
+    if (process.env.TARO_ENV === "h5") {
+      window.open(downloadUrl, "_blank");
     } else {
       // 小程序环境提示用户
       Taro.showModal({
-        title: '下载提示',
-        content: '请复制链接到浏览器下载',
-        confirmText: '复制链接',
+        title: "下载提示",
+        content: "请复制链接到浏览器下载",
+        confirmText: "复制链接",
         success: (res) => {
           if (res.confirm) {
             Taro.setClipboardData({
               data: downloadUrl,
               success: () => {
-                Taro.showToast({ title: '链接已复制', icon: 'success' });
+                Taro.showToast({ title: "链接已复制", icon: "success" });
               },
             });
           }
@@ -129,22 +129,22 @@ export default function MaterialDetail() {
     if (!material) return;
 
     Taro.showModal({
-      title: '确认删除',
-      content: '删除后无法恢复，确定要删除这个资料吗？',
+      title: "确认删除",
+      content: "删除后无法恢复，确定要删除这个资料吗？",
       success: async (res) => {
         if (res.confirm) {
           try {
             await request({
               url: `/materials/${material.id}`,
-              method: 'DELETE',
+              method: "DELETE",
             });
 
-            Taro.showToast({ title: '删除成功', icon: 'success' });
+            Taro.showToast({ title: "删除成功", icon: "success" });
             setTimeout(() => Taro.navigateBack(), 1500);
           } catch (error: any) {
             Taro.showToast({
-              title: error.message || '删除失败',
-              icon: 'none',
+              title: error.message || "删除失败",
+              icon: "none",
             });
           }
         }
@@ -168,7 +168,7 @@ export default function MaterialDetail() {
     );
   }
 
-  const isOwner = userRole === 'teacher' && userId === material.teacherId;
+  const isOwner = userRole === "teacher" && userId === material.teacherId;
   const mediaType = getMediaType(material.fileExtension);
   const fileUrl = getFileUrl(material.fileUrl);
 
@@ -178,33 +178,29 @@ export default function MaterialDetail() {
         <View className="header">
           <Text className="title">{material.name}</Text>
           <Text className="file-type">
-            {material.fileExtension || '未知格式'}
+            {material.fileExtension || "未知格式"}
           </Text>
         </View>
 
         {/* 在线预览区域 */}
-        {mediaType === 'image' && (
+        {mediaType === "image" && (
           <View className="preview-section">
             <Text className="preview-title">图片预览</Text>
-            <Image 
-              className="preview-image" 
-              src={fileUrl} 
+            <Image
+              className="preview-image"
+              src={fileUrl}
               mode="widthFix"
               onClick={() => {
-                if (process.env.TARO_ENV === 'h5') {
-                  window.open(fileUrl, '_blank');
-                } else {
-                  Taro.previewImage({
-                    urls: [fileUrl],
-                    current: fileUrl,
-                  });
-                }
+                Taro.previewImage({
+                  urls: [fileUrl],
+                  current: fileUrl,
+                });
               }}
             />
           </View>
         )}
 
-        {mediaType === 'video' && (
+        {mediaType === "video" && (
           <View className="preview-section">
             <Text className="preview-title">视频播放</Text>
             <Video
@@ -219,7 +215,7 @@ export default function MaterialDetail() {
           </View>
         )}
 
-        {mediaType === 'audio' && (
+        {mediaType === "audio" && (
           <View className="preview-section">
             <Text className="preview-title">音频播放</Text>
             <View className="audio-player">
@@ -247,7 +243,7 @@ export default function MaterialDetail() {
           <View className="info-item">
             <Text className="info-label">上传时间</Text>
             <Text className="info-value">
-              {new Date(material.createdAt).toLocaleString('zh-CN')}
+              {new Date(material.createdAt).toLocaleString("zh-CN")}
             </Text>
           </View>
           {material.teacherName && (
@@ -264,7 +260,11 @@ export default function MaterialDetail() {
       </View>
 
       <View className="action-section">
-        <Button className="download-btn" type="primary" onClick={handleDownload}>
+        <Button
+          className="download-btn"
+          type="primary"
+          onClick={handleDownload}
+        >
           下载资料
         </Button>
 
