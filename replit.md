@@ -91,6 +91,37 @@ The project integrates with the following external services and APIs:
 
 ## Recent Changes
 
+### 2025-11-12 - iOS Safari Video Playback Fix
+**Issue:** Video files could not be played on iOS mobile browsers (Safari/Chrome), play button was unresponsive.
+**Root Cause:** Missing `playsinline` attribute required by iOS Safari for inline video playback.
+**Fix:** Added iOS-compatible Video component attributes:
+- ✅ `playsinline` - Critical for iOS inline playback (prevents forced fullscreen)
+- ✅ `preload="metadata"` - Preloads video metadata for better compatibility
+- ✅ `objectFit="contain"` - Proper video scaling on mobile devices
+- ✅ `enableProgressGesture` - Enables swipe gestures for progress control
+- ✅ `showFullscreenBtn` - Allows fullscreen mode when needed
+
+**Technical Details:**
+- iOS Safari blocks videos without `playsinline` attribute
+- Taro Video component updated in `src/pages/material-detail/index.tsx`
+- Now fully compatible with iOS Safari, Chrome, and all mobile browsers
+
+### 2025-11-12 - Deployment Configuration Fix
+**Issue:** Deployment failed with Express route syntax errors and crash loops.
+**Root Cause:** 
+1. Express wildcard route `app.get("*", ...)` incompatible with newer path-to-regexp
+2. Port configuration didn't match deployment requirements
+**Fix:**
+- Replaced wildcard route with middleware approach `app.use((req, res, next) => {...})`
+- Auto-detect port: development (3001) vs production (5000)
+- Production server serves both API and static H5 frontend
+**Deployment Config:**
+```
+deploymentTarget = "autoscale"
+build = ["npm", "run", "build:h5"]
+run = ["npm", "start"]
+```
+
 ### 2025-10-29 - Materials Management Complete Redesign v3.0.0
 **Major Upgrade:** Transformed materials management into a full-featured table interface with comprehensive data management capabilities
 
