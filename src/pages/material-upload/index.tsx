@@ -151,10 +151,11 @@ export default function MaterialUpload() {
 
       const { objectPath } = await uploadResponse.json();
 
-      // 提取文件后缀
-      const extension = file.name
-        .substring(file.name.lastIndexOf("."))
-        .toLowerCase();
+      // 提取文件后缀（安全处理，避免没有扩展名的情况）
+      const dotIndex = file.name.lastIndexOf(".");
+      const extension = dotIndex > 0 && dotIndex < file.name.length - 1
+        ? file.name.substring(dotIndex).toLowerCase()
+        : "";
 
       setUploadedFile({
         url: objectPath,

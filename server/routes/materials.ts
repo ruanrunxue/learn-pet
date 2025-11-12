@@ -34,7 +34,13 @@ router.post('/upload', authMiddleware, async (req, res) => {
     }
 
     // 使用客户端传来的文件扩展名，如果没有则尝试从URL提取
-    const fileExtension = clientFileExtension || fileUrl.substring(fileUrl.lastIndexOf('.')).toLowerCase() || '';
+    let fileExtension = clientFileExtension || '';
+    if (!fileExtension) {
+      const dotIndex = fileUrl.lastIndexOf('.');
+      fileExtension = dotIndex > 0 && dotIndex < fileUrl.length - 1
+        ? fileUrl.substring(dotIndex).toLowerCase()
+        : '';
+    }
 
     // 创建学习资料记录
     const [material] = await db
