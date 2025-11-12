@@ -32,7 +32,8 @@
     "dev:harmony-hybrid": "npm run build:harmony-hybrid -- --watch",
     "db:push": "drizzle-kit push",
     "server": "tsx watch server/index.ts",
-    "server:dev": "nodemon --watch server --exec tsx server/index.ts"
+    "server:dev": "nodemon --watch server --exec tsx server/index.ts",
+    "start": "NODE_ENV=production tsx server/index.ts"
   },
   "browserslist": [
     "defaults and fully supports es6-module",
