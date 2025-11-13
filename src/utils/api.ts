@@ -4,7 +4,37 @@
  */
 import Taro from '@tarojs/taro';
 
-const API_BASE_URL = '/api';
+/**
+ * 根据运行环境动态设置 API Base URL
+ * - H5 环境：使用相对路径（在同一域名下）
+ * - 微信小程序环境：使用完整的 HTTPS URL（通过构建配置注入）
+ */
+const getApiBaseUrl = () => {
+  if (process.env.TARO_ENV === 'weapp') {
+    return API_BASE_URL_WEAPP;
+  }
+  return API_BASE_URL_H5;
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+/**
+ * 解析完整的 API URL
+ * 用于处理存储路径等需要绝对路径的场景
+ * @param path - 路径（如 /storage/objects/xxx 或 /materials/123）
+ * @returns 完整的 URL
+ */
+export const resolveApiUrl = (path: string): string => {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  
+  if (path.startsWith('/api/')) {
+    path = path.substring(4);
+  }
+  
+  return `${API_BASE_URL}${path}`;
+};
 
 /**
  * 自定义API错误类

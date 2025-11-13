@@ -1,6 +1,19 @@
 import type { UserConfigExport } from "@tarojs/cli"
 
 export default {
+  defineConstants: {
+    API_BASE_URL_H5: JSON.stringify('/api'),
+    API_BASE_URL_WEAPP: (() => {
+      const domain = process.env.PRODUCTION_DOMAIN || process.env.REPLIT_DEV_DOMAIN;
+      if (!domain) {
+        console.error('❌ ERROR: Neither PRODUCTION_DOMAIN nor REPLIT_DEV_DOMAIN is set!');
+        console.error('   WeChat Mini Program will NOT work without a domain.');
+        console.error('   Please set PRODUCTION_DOMAIN in your environment secrets.');
+        throw new Error('Missing required environment variable: PRODUCTION_DOMAIN or REPLIT_DEV_DOMAIN');
+      }
+      return JSON.stringify(`https://${domain}/api`);
+    })(),
+  },
   mini: {},
   h5: {
     /**

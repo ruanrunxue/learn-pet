@@ -91,6 +91,42 @@ The project integrates with the following external services and APIs:
 
 ## Recent Changes
 
+### 2025-11-13 - WeChat Mini Program API Configuration Fix
+**Issue:** WeChat Mini Program registration and login failed because API requests used relative paths.
+**Root Cause:** WeChat Mini Program requires absolute HTTPS URLs, while H5 can use relative paths.
+**Fix:** Implemented environment-aware API URL resolution system:
+- ✅ Added `defineConstants` in `config/dev.ts` and `config/prod.ts` to inject environment-specific API URLs
+- ✅ Created `resolveApiUrl()` helper function in `src/utils/api.ts` for unified URL resolution
+- ✅ H5 environment uses relative path `/api` (proxied to backend)
+- ✅ WeChat Mini Program uses absolute URL `https://REPLIT_DOMAIN/api`
+- ✅ Production deployment supports custom domain via `PRODUCTION_DOMAIN` environment variable
+- ✅ Updated all hardcoded API paths in `material-upload` and `material-detail` to use `resolveApiUrl()`
+
+**Technical Details:**
+- Build-time constant injection via Taro's `defineConstants` configuration
+- Type-safe with global TypeScript declarations in `src/global.d.ts`
+- Automatic domain detection from `REPLIT_DEV_DOMAIN` environment variable
+- Fallback to hardcoded domain for stability
+
+**How to Configure for Production:**
+1. Set `PRODUCTION_DOMAIN` environment variable in Replit Secrets (e.g., `myapp.example.com`)
+2. WeChat Mini Program will use `https://${PRODUCTION_DOMAIN}/api`
+3. **Important:** Production build will fail if neither `PRODUCTION_DOMAIN` nor `REPLIT_DEV_DOMAIN` is set, preventing silent misconfiguration
+
+**Testing WeChat Mini Program:**
+1. Open WeChat Developer Tools
+2. Import the project and build for WeChat (`npm run build:weapp`)
+3. API calls will automatically use the correct HTTPS URL based on environment
+
+### 2025-11-12 - File Extension Extraction Safety Fix
+**Issue:** Upload failed with "The String did not match the expected pattern" error for certain file names.
+**Root Cause:** Unsafe file extension extraction using `substring(lastIndexOf('.'))` without boundary checks.
+**Fix:** 
+- ✅ Frontend: Safe extraction with index validation (`dotIndex > 0 && dotIndex < length - 1`)
+- ✅ Backend: Matching validation logic in `server/routes/materials.ts`
+- ✅ Handles edge cases: no extension, trailing dots, dots at start/end
+- ✅ Returns empty string as safe fallback instead of crashing
+
 ### 2025-11-12 - iOS Safari Video Playback Fix
 **Issue:** Video files could not be played on iOS mobile browsers (Safari/Chrome), play button was unresponsive.
 **Root Cause:** Missing `playsinline` attribute required by iOS Safari for inline video playback.

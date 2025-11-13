@@ -1,7 +1,7 @@
 import { View, Text, Button, Image, Video } from "@tarojs/components";
 import Taro, { useLoad } from "@tarojs/taro";
 import { useState } from "react";
-import { request } from "../../utils/api";
+import { request, resolveApiUrl } from "../../utils/api";
 import "./index.scss";
 
 interface Material {
@@ -71,7 +71,7 @@ export default function MaterialDetail() {
    */
   const getFileUrl = (fileUrl: string) => {
     if (fileUrl.startsWith("/objects/")) {
-      return `/api/storage${fileUrl}`;
+      return resolveApiUrl(`/storage${fileUrl}`);
     }
     return fileUrl;
   };

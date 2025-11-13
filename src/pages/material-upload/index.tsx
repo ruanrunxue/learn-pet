@@ -1,7 +1,7 @@
 import { View, Text, Input, Button } from "@tarojs/components";
 import Taro, { useLoad } from "@tarojs/taro";
 import { useState, useRef } from "react";
-import { request } from "../../utils/api";
+import { request, resolveApiUrl } from "../../utils/api";
 import "./index.scss";
 
 /**
@@ -136,7 +136,8 @@ export default function MaterialUpload() {
 
       // 上传文件
       const token = Taro.getStorageSync("token");
-      const uploadResponse = await fetch("/api/storage/upload", {
+      const uploadUrl = resolveApiUrl("/storage/upload");
+      const uploadResponse = await fetch(uploadUrl, {
         method: "POST",
         body: formData,
         headers: {
