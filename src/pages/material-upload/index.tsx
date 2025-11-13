@@ -93,7 +93,7 @@ export default function MaterialUpload() {
       const input = document.createElement("input");
       input.type = "file";
       input.accept =
-        ".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.jpg,.jpeg,.png,.gif,.mp3,.wav,.mp4,.avi,.mov,.zip,.rar";
+        ".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.jpg,.jpeg,.png,.gif,.mp3,.m4a,.wav,.mp4,.avi,.mov,.zip,.rar";
       input.onchange = async (e: any) => {
         const file = e.target.files[0];
         if (file) {
@@ -153,9 +153,10 @@ export default function MaterialUpload() {
 
       // 提取文件后缀（安全处理，避免没有扩展名的情况）
       const dotIndex = file.name.lastIndexOf(".");
-      const extension = dotIndex > 0 && dotIndex < file.name.length - 1
-        ? file.name.substring(dotIndex).toLowerCase()
-        : "";
+      const extension =
+        dotIndex > 0 && dotIndex < file.name.length - 1
+          ? file.name.substring(dotIndex).toLowerCase()
+          : "";
 
       setUploadedFile({
         url: objectPath,
@@ -253,8 +254,8 @@ export default function MaterialUpload() {
                 <Text className="upload-icon">☁️</Text>
                 <Text className="upload-text">点击浏览文件或拖拽到此处</Text>
                 <Text className="upload-hint">
-                  支持 Word, Excel, PPT, PDF, JPG, PNG, GIF, MP3, WAV, MP4, AVI,
-                  MOV, ZIP, RAR
+                  支持 Word, Excel, PPT, PDF, JPG, PNG, GIF, MP3, m4a, WAV, MP4,
+                  AVI, MOV, ZIP, RAR
                 </Text>
                 <Text className="upload-size">文件大小限制：1GB</Text>
               </View>
