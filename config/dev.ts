@@ -7,14 +7,11 @@ export default {
   },
   defineConstants: {
     API_BASE_URL_H5: JSON.stringify('/api'),
-    API_BASE_URL_WEAPP: (() => {
-      const domain = process.env.REPLIT_DEV_DOMAIN;
-      if (!domain) {
-        console.warn('⚠️  WARNING: REPLIT_DEV_DOMAIN not set. WeChat Mini Program API calls may fail.');
-        console.warn('    Please check your environment variables.');
-      }
-      return JSON.stringify(domain ? `https://${domain}/api` : '/api');
-    })(),
+    API_BASE_URL_WEAPP: JSON.stringify(
+      process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}/api`
+        : '/api'
+    ),
   },
   mini: {},
   h5: {
