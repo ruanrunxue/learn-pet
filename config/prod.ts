@@ -1,13 +1,14 @@
-import type { UserConfigExport } from "@tarojs/cli"
+import type { UserConfigExport } from "@tarojs/cli";
 
 export default {
   defineConstants: {
-    API_BASE_URL_H5: JSON.stringify('/api'),
-    API_BASE_URL_WEAPP: JSON.stringify(
-      (process.env.PRODUCTION_DOMAIN || process.env.REPLIT_DEV_DOMAIN)
-        ? `https://${process.env.PRODUCTION_DOMAIN || process.env.REPLIT_DEV_DOMAIN}/api`
-        : '/api'
-    ),
+    API_BASE_URL_H5: JSON.stringify("/api"),
+    // API_BASE_URL_WEAPP: JSON.stringify(
+    //   (process.env.PRODUCTION_DOMAIN || process.env.REPLIT_DEV_DOMAIN)
+    //     ? `https://${process.env.PRODUCTION_DOMAIN || process.env.REPLIT_DEV_DOMAIN}/api`
+    //     : '/api'
+    // ),
+    API_BASE_URL_WEAPP: JSON.stringify("https://learn-pet.replit.app/api"),
   },
   mini: {},
   h5: {
@@ -37,5 +38,5 @@ export default {
     //       postProcess: (context) => ({ ...context, outputPath: path.join(staticDir, 'index.html') })
     //     }))
     // }
-  }
-} satisfies UserConfigExport<'webpack5'>
+  },
+} satisfies UserConfigExport<"webpack5">;
